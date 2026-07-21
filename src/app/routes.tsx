@@ -1,6 +1,7 @@
 import { createHashRouter } from "react-router";
 import Login from "./components/Login";
 import Layout from "./components/Layout";
+import ProtectedRoute from "./components/ProtectedRoute";
 import MapaMesas from "./components/MapaMesas";
 import MasInformacion from "./components/MasInformacion";
 import AdminPanel from "./components/AdminPanel";
@@ -17,7 +18,11 @@ export const router = createHashRouter([
   },
   {
     path: "/dashboard",
-    element: <Layout />,
+    element: (
+      <ProtectedRoute>
+        <Layout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         index: true,

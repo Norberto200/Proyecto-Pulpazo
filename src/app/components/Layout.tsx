@@ -4,7 +4,7 @@ import {
   LayoutGrid, Info, LogOut,
   Menu, X, ShieldCheck,
   ShoppingCart, ClipboardList, BookOpen,
-  TrendingUp, Package,
+  TrendingUp, Package, Sun, Moon,
 } from "lucide-react";
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
 import { useApp } from "../context/AppContext";
@@ -27,7 +27,7 @@ const clientItems = [
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { cartCount } = useApp();
+  const { cartCount, userRole, userName, logout, theme, setTheme } = useApp();
   const [sidebarOpen, setSidebarOpen] = useState(true);
 
   const isActive = (path: string) => location.pathname === path;
@@ -39,7 +39,7 @@ export default function Layout() {
         onClick={() => navigate(path)}
         title={!sidebarOpen ? label : undefined}
         className={`w-full flex items-center gap-3 px-3 py-2.5 mb-0.5 rounded-lg transition-all relative group ${
-          active ? "text-[#D4AF37] bg-[#D4AF37]/8" : "text-gray-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5"
+          active ? "text-[#D4AF37] bg-[#D4AF37]/8 font-medium" : "text-gray-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5"
         } ${!sidebarOpen ? "justify-center" : ""}`}
       >
         {active && <div className="absolute left-0 top-1 bottom-1 w-0.5 bg-[#D4AF37] rounded-r" />}
@@ -57,10 +57,10 @@ export default function Layout() {
   };
 
   return (
-    <div className="flex h-screen bg-[#0d0d0d] overflow-hidden">
+    <div className="flex h-screen bg-background text-foreground transition-colors duration-300 overflow-hidden">
       {/* Sidebar */}
       <aside
-        className="bg-[#0d0d0d] border-r border-[#D4AF37]/20 flex flex-col flex-shrink-0 transition-all duration-300"
+        className="bg-card border-r border-border flex flex-col flex-shrink-0 transition-all duration-300"
         style={{ width: sidebarOpen ? "220px" : "56px" }}
       >
         {/* Logo */}
@@ -92,18 +92,18 @@ export default function Layout() {
           {/* Admin section */}
           <div>
             {sidebarOpen && (
-              <p className="text-[9px] tracking-[0.2em] text-gray-600 uppercase px-3 mb-2">Administración</p>
+              <p className="text-[9px] tracking-[0.2em] text-gray-500 uppercase px-3 mb-2 font-semibold">Administración</p>
             )}
-            {!sidebarOpen && <div className="border-t border-[#D4AF37]/10 my-1 mx-2" />}
+            {!sidebarOpen && <div className="border-t border-border my-1 mx-2" />}
             {adminItems.map((item) => <NavItem key={item.path} {...item} />)}
           </div>
 
           {/* Client section */}
           <div>
             {sidebarOpen && (
-              <p className="text-[9px] tracking-[0.2em] text-gray-600 uppercase px-3 mb-2">Punto de Venta</p>
+              <p className="text-[9px] tracking-[0.2em] text-gray-500 uppercase px-3 mb-2 font-semibold">Punto de Venta</p>
             )}
-            {!sidebarOpen && <div className="border-t border-[#D4AF37]/10 my-1 mx-2" />}
+            {!sidebarOpen && <div className="border-t border-border my-1 mx-2" />}
             {clientItems.map((item) => <NavItem key={item.path} {...item} />)}
           </div>
         </div>
@@ -111,7 +111,7 @@ export default function Layout() {
         {/* Logout */}
         <div className="p-2 mb-2">
           <button
-            onClick={() => navigate("/")}
+            onClick={async () => { await logout(); navigate("/"); }}
             title={!sidebarOpen ? "Cerrar Sesión" : undefined}
             className={`w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 hover:text-[#D4AF37] rounded-lg transition-colors ${
               !sidebarOpen ? "justify-center" : ""
@@ -126,9 +126,25 @@ export default function Layout() {
       {/* Main */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-[#0d0d0d] border-b border-[#D4AF37]/20 px-6 py-3 flex items-center justify-end">
+        <header className="bg-card border-b border-border px-6 py-3 flex items-center justify-between transition-colors duration-300">
+          {/* Left: Role badge & Theme Toggle */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 px-2.5 py-1 bg-background border border-border rounded-lg">
+              <span className="text-[10px] tracking-widest text-gray-500 uppercase font-semibold">Rol:</span>
+              <span className="text-xs text-[#D4AF37] font-semibold capitalize">{userRole}</span>
+            </div>
+
+            <button
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+              className="w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center text-foreground hover:text-[#D4AF37] transition-all cursor-pointer"
+              title={theme === "dark" ? "Modo Claro" : "Modo Oscuro"}
+            >
+              {theme === "dark" ? <Sun className="w-4 h-4 text-[#D4AF37]" /> : <Moon className="w-4 h-4 text-[#b3922e]" />}
+            </button>
+          </div>
+
+          {/* Right: Cart shortcut & User */}
           <div className="flex items-center gap-5">
-            {/* Cart shortcut */}
             <button
               onClick={() => navigate("/dashboard/carrito")}
               className="relative text-[#D4AF37] hover:text-[#F4D03F] transition-colors"
@@ -141,13 +157,18 @@ export default function Layout() {
               )}
             </button>
 
-            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] flex items-center justify-center cursor-pointer">
-              <span className="text-black text-xs font-semibold">AD</span>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] flex items-center justify-center">
+                <span className="text-black text-xs font-semibold uppercase">
+                  {userName.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
+                </span>
+              </div>
+              <span className="text-xs text-foreground font-semibold hidden sm:block">{userName}</span>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-auto">
+        <main className="flex-1 overflow-auto bg-background transition-colors duration-300">
           <Outlet />
         </main>
       </div>
