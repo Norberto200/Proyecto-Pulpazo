@@ -1,0 +1,1 @@
+const a={libre:"#22c55e",ocupado:"#ef4444",reservado:"#f97316"},s={libre:"Libre",ocupado:"Ocupado",reservado:"Reservado"},e=o=>"$"+o.toLocaleString("es-MX",{minimumFractionDigits:2,maximumFractionDigits:2}),t=1500;function c(o){return t+o.efectivoSales+o.totalAbonos-o.totalGastos}export{t as S,s as a,c,e as f,a as s};
