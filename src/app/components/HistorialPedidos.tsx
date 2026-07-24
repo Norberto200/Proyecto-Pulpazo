@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { CheckCircle, Clock, XCircle, ChevronDown, ChevronUp, ShoppingBag } from "lucide-react";
 import { useApp, Order } from "../context/AppContext";
 
@@ -16,17 +16,17 @@ function OrderCard({ order }: { order: Order }) {
   const timeStr = date.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
 
   return (
-    <div className="bg-[#111] border border-[#D4AF37]/20 rounded-xl overflow-hidden">
+    <div className="bg-[#111] border border-primary/20 rounded-xl overflow-hidden">
       {/* Header row */}
       <button onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center gap-4 px-5 py-4 hover:bg-[#D4AF37]/4 transition-colors text-left">
-        <div className="w-9 h-9 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/20 flex items-center justify-center flex-shrink-0">
-          <ShoppingBag className="w-4 h-4 text-[#D4AF37]" strokeWidth={1.5} />
+        className="w-full flex items-center gap-4 px-5 py-4 hover:bg-primary/4 transition-colors text-left">
+        <div className="w-9 h-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
+          <ShoppingBag className="w-4 h-4 text-primary" strokeWidth={1.5} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-white text-sm font-medium">{order.id}</span>
-            {order.table && <span className="text-[10px] text-gray-500 bg-[#D4AF37]/8 px-2 py-0.5 rounded-full">Mesa {order.table}</span>}
+            {order.table && <span className="text-[10px] text-gray-500 bg-primary/8 px-2 py-0.5 rounded-full">Mesa {order.table}</span>}
           </div>
           <p className="text-xs text-gray-500 mt-0.5">{dateStr} · {timeStr} · {order.paymentMethod}</p>
         </div>
@@ -35,7 +35,7 @@ function OrderCard({ order }: { order: Order }) {
             <Icon className="w-3.5 h-3.5" style={{ color }} strokeWidth={1.5} />
             <span className="text-xs" style={{ color }}>{label}</span>
           </div>
-          <span className="text-[#D4AF37] font-semibold text-sm">${order.total.toFixed(2)}</span>
+          <span className="text-primary font-semibold text-sm">${order.total.toFixed(2)}</span>
           {expanded
             ? <ChevronUp className="w-4 h-4 text-gray-500" strokeWidth={1.5} />
             : <ChevronDown className="w-4 h-4 text-gray-500" strokeWidth={1.5} />
@@ -45,7 +45,7 @@ function OrderCard({ order }: { order: Order }) {
 
       {/* Expanded items */}
       {expanded && (
-        <div className="border-t border-[#D4AF37]/10 px-5 py-4 space-y-3">
+        <div className="border-t border-primary/10 px-5 py-4 space-y-3">
           {order.items.map((item) => (
             <div key={item.id} className="flex items-center gap-3">
               <img src={item.image} alt={item.name} className="w-10 h-10 rounded-lg object-cover flex-shrink-0" />
@@ -53,12 +53,12 @@ function OrderCard({ order }: { order: Order }) {
                 <p className="text-white text-sm truncate">{item.name}</p>
                 <p className="text-gray-500 text-xs">{item.category} · x{item.quantity}</p>
               </div>
-              <span className="text-[#D4AF37] text-sm flex-shrink-0">${(item.price * item.quantity).toFixed(2)}</span>
+              <span className="text-primary text-sm flex-shrink-0">${(item.price * item.quantity).toFixed(2)}</span>
             </div>
           ))}
-          <div className="border-t border-[#D4AF37]/10 pt-3 flex justify-between">
+          <div className="border-t border-primary/10 pt-3 flex justify-between">
             <span className="text-gray-500 text-xs">IVA incluido (16%)</span>
-            <span className="text-[#D4AF37] font-semibold text-sm">Total: ${order.total.toFixed(2)}</span>
+            <span className="text-primary font-semibold text-sm">Total: ${order.total.toFixed(2)}</span>
           </div>
         </div>
       )}
@@ -81,12 +81,12 @@ export default function HistorialPedidos() {
         {/* Header */}
         <div className="flex items-center justify-between mb-6">
           <div>
-            <h1 className="text-2xl text-[#D4AF37] tracking-wide">Historial de Pedidos</h1>
+            <h1 className="text-2xl text-primary tracking-wide">Historial de Pedidos</h1>
             <p className="text-gray-500 text-sm mt-1">{orders.length} pedidos registrados</p>
           </div>
           <div className="text-right">
             <p className="text-xs text-gray-500">Total consumido</p>
-            <p className="text-[#D4AF37] font-semibold">${totalSpent.toFixed(2)}</p>
+            <p className="text-primary font-semibold">${totalSpent.toFixed(2)}</p>
           </div>
         </div>
 
@@ -98,7 +98,7 @@ export default function HistorialPedidos() {
             return (
               <button key={s} onClick={() => setFilter(filter === s ? "todos" : s)}
                 className={`rounded-xl p-4 border text-left transition-all ${
-                  filter === s ? "border-[#D4AF37]/50 bg-[#D4AF37]/8" : "border-[#D4AF37]/15 bg-[#111] hover:border-[#D4AF37]/30"
+                  filter === s ? "border-primary/50 bg-primary/8" : "border-primary/15 bg-[#111] hover:border-primary/30"
                 }`}>
                 <p className="text-2xl font-light" style={{ color }}>{count}</p>
                 <p className="text-xs text-gray-400 mt-0.5">{label}</p>
@@ -108,11 +108,11 @@ export default function HistorialPedidos() {
         </div>
 
         {/* Filter tabs */}
-        <div className="flex gap-1 border-b border-[#D4AF37]/20 mb-6">
+        <div className="flex gap-1 border-b border-primary/20 mb-6">
           {([["todos","Todos"], ["completado","Completados"], ["pendiente","Pendientes"], ["cancelado","Cancelados"]] as const).map(([val, lbl]) => (
             <button key={val} onClick={() => setFilter(val)}
               className={`px-4 py-2 text-xs tracking-wider border-b-2 -mb-px transition-all ${
-                filter === val ? "border-[#D4AF37] text-[#D4AF37]" : "border-transparent text-gray-400 hover:text-[#D4AF37]"
+                filter === val ? "border-primary text-primary" : "border-transparent text-gray-400 hover:text-primary"
               }`}>
               {lbl}
             </button>

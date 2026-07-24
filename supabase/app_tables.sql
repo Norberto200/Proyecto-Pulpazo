@@ -95,26 +95,27 @@ CREATE TABLE IF NOT EXISTS app_abonos (
 );
 
 -- ============================================================
--- RLS: Deshabilitado (la app no tiene auth real)
+-- RLS: Habilitado con permisos por rol
+-- Ver enable_rls_by_role.sql para las políticas detalladas
 -- ============================================================
-ALTER TABLE app_platillos DISABLE ROW LEVEL SECURITY;
-ALTER TABLE app_mesas DISABLE ROW LEVEL SECURITY;
-ALTER TABLE app_pedidos DISABLE ROW LEVEL SECURITY;
-ALTER TABLE app_insumos DISABLE ROW LEVEL SECURITY;
-ALTER TABLE app_clientes DISABLE ROW LEVEL SECURITY;
-ALTER TABLE app_gastos DISABLE ROW LEVEL SECURITY;
-ALTER TABLE app_abonos DISABLE ROW LEVEL SECURITY;
+ALTER TABLE app_platillos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app_mesas ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app_pedidos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app_insumos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app_clientes ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app_gastos ENABLE ROW LEVEL SECURITY;
+ALTER TABLE app_abonos ENABLE ROW LEVEL SECURITY;
 
 -- ============================================================
--- PERMISOS: Permitir todo a rol anon y authenticated
+-- PERMISOS: Solo authenticated (anon no accede)
 -- ============================================================
-GRANT ALL ON app_platillos TO anon, authenticated;
-GRANT ALL ON app_mesas TO anon, authenticated;
-GRANT ALL ON app_pedidos TO anon, authenticated;
-GRANT ALL ON app_insumos TO anon, authenticated;
-GRANT ALL ON app_clientes TO anon, authenticated;
-GRANT ALL ON app_gastos TO anon, authenticated;
-GRANT ALL ON app_abonos TO anon, authenticated;
+GRANT SELECT ON app_platillos TO authenticated;
+GRANT SELECT ON app_mesas TO authenticated;
+GRANT SELECT ON app_pedidos TO authenticated;
+GRANT SELECT ON app_insumos TO authenticated;
+GRANT SELECT ON app_clientes TO authenticated;
+GRANT SELECT ON app_gastos TO authenticated;
+GRANT SELECT ON app_abonos TO authenticated;
 
 -- ============================================================
 -- DATOS INICIALES (solo si las tablas estan vacias)

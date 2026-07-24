@@ -1,4 +1,4 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { useNavigate } from "react-router";
 import { User, Lock, ArrowRight, Facebook, Instagram, Eye, EyeOff } from "lucide-react";
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
@@ -29,7 +29,10 @@ export default function Login() {
       return;
     }
 
-    navigate("/dashboard/mapa-mesas");
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session) {
+      navigate("/dashboard/mapa-mesas");
+    }
     setLoading(false);
   };
 
@@ -61,7 +64,7 @@ export default function Login() {
         {/* Logo */}
         <div className="flex flex-col items-center mb-6">
           <div
-            className="rounded-full overflow-hidden border-2 border-[#D4AF37]/60 w-28 h-28 flex-shrink-0"
+            className="rounded-full overflow-hidden border-2 border-primary/60 w-28 h-28 flex-shrink-0"
             style={{ boxShadow: "0 0 28px rgba(212,175,55,0.45)" }}
           >
             <ImageWithFallback
@@ -70,7 +73,7 @@ export default function Login() {
               className="w-full h-full object-cover"
             />
           </div>
-          <h1 className="text-3xl font-bold tracking-[0.22em] mt-4" style={{ color: "#D4AF37" }}>
+          <h1 className="text-3xl font-bold tracking-[0.22em] mt-4" style={{ color: "var(--primary)" }}>
             EL PULPAZO
           </h1>
           <p className="text-sm tracking-wider text-gray-400 mt-1">Management System Access</p>
@@ -91,7 +94,7 @@ export default function Login() {
             </label>
             <div className="relative">
               <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                <User className="w-4 h-4 text-[#D4AF37]" strokeWidth={1.5} />
+                <User className="w-4 h-4 text-primary" strokeWidth={1.5} />
               </div>
               <input
                 type="email"
@@ -99,7 +102,7 @@ export default function Login() {
                 placeholder="admin@elpulpazo.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full bg-[#0d0d0d]/60 border border-[#D4AF37]/25 rounded-lg py-3.5 pl-11 pr-4 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-[#D4AF37]/70 transition-colors"
+                className="w-full bg-[#0d0d0d]/60 border border-primary/25 rounded-lg py-3.5 pl-11 pr-4 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-primary/70 transition-colors"
               />
             </div>
           </div>
@@ -110,7 +113,7 @@ export default function Login() {
             </label>
             <div className="relative">
               <div className="absolute left-4 top-1/2 -translate-y-1/2">
-                <Lock className="w-4 h-4 text-[#D4AF37]" strokeWidth={1.5} />
+                <Lock className="w-4 h-4 text-primary" strokeWidth={1.5} />
               </div>
               <input
                 type={showPassword ? "text" : "password"}
@@ -118,12 +121,12 @@ export default function Login() {
                 placeholder="••••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-[#0d0d0d]/60 border border-[#D4AF37]/25 rounded-lg py-3.5 pl-11 pr-12 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-[#D4AF37]/70 transition-colors"
+                className="w-full bg-[#0d0d0d]/60 border border-primary/25 rounded-lg py-3.5 pl-11 pr-12 text-white placeholder:text-gray-600 text-sm focus:outline-none focus:border-primary/70 transition-colors"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-[#D4AF37] transition-colors"
+                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-primary transition-colors"
               >
                 {showPassword ? <EyeOff className="w-4 h-4" strokeWidth={1.5} /> : <Eye className="w-4 h-4" strokeWidth={1.5} />}
               </button>
@@ -133,7 +136,7 @@ export default function Login() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#D4AF37] hover:bg-[#C9A830] disabled:bg-gray-600 text-black py-3.5 rounded-lg flex items-center justify-center gap-3 transition-all duration-300 group mt-2"
+            className="w-full bg-primary hover:bg-[#C9A830] disabled:bg-gray-600 text-black py-3.5 rounded-lg flex items-center justify-center gap-3 transition-all duration-300 group mt-2"
           >
             <span className="tracking-[0.18em] text-sm font-semibold">
               {loading ? "INICIANDO..." : "INICIAR SESIÓN"}

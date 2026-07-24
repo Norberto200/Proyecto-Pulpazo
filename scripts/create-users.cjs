@@ -1,13 +1,32 @@
 const { createClient } = require('@supabase/supabase-js');
+const path = require('path');
+const fs = require('fs');
 
-const url = 'https://ihhlbzwfjzjcptdqgphi.supabase.co';
-const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImloaGxiendmanpqY3B0ZHFncGhpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQwMjc0MzksImV4cCI6MjA5OTYwMzQzOX0.OJKpqwLgxCQrfs3hKLfkVZoWmbRlXK3BCP1lzgnxHHM';
+// Leer .env del directorio raiz del proyecto
+const envPath = path.resolve(__dirname, '..', '.env');
+const env = {};
+if (fs.existsSync(envPath)) {
+  fs.readFileSync(envPath, 'utf-8').split('\n').forEach(line => {
+    const match = line.match(/^([^#=]+)=(.*)$/);
+    if (match) env[match[1].trim()] = match[2].trim();
+  });
+}
+
+const url = env.VITE_SUPABASE_URL;
+const key = env.VITE_SUPABASE_ANON_KEY;
+
+if (!url || !key) {
+  console.error('ERROR: Faltan VITE_SUPABASE_URL o VITE_SUPABASE_ANON_KEY en .env');
+  process.exit(1);
+}
+
 const supabase = createClient(url, key);
 
 const users = [
   { email: 'admin@elpulpazo.com', password: 'admin123', role: 'administrador', name: 'Administrador' },
   { email: 'cajera@elpulpazo.com', password: 'cajera123', role: 'cajera', name: 'Cajera' },
   { email: 'mesero@elpulpazo.com', password: 'mesero123', role: 'mesero', name: 'Mesero' },
+  { email: 'cocina@elpulpazo.com', password: 'cocina123', role: 'cocina', name: 'Cocina' },
 ];
 
 async function createUsers() {

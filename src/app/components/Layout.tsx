@@ -1,17 +1,27 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import { Outlet, useNavigate, useLocation } from "react-router";
 import {
   LayoutGrid, Info, LogOut,
   Menu, X, ShieldCheck,
   ShoppingCart, ClipboardList, BookOpen,
-  TrendingUp, Package, Sun, Moon,
+  TrendingUp, Package, Sun, Moon, ExternalLink, DollarSign, Truck, Users, Bike, ChefHat, BarChart3, Tag, SplitSquareHorizontal,
 } from "lucide-react";
 import { ImageWithFallback } from "@/app/components/figma/ImageWithFallback";
 import { useApp } from "../context/AppContext";
+import NotificacionesBell from "./NotificacionesBell";
+import { canAccess, roleLabels } from "../permissions";
 import logoImg from "@/imports/image.png";
 
 const adminItems = [
   { path: "/dashboard/dashboard-ejecutivo", label: "Dashboard Ejecutivo", icon: TrendingUp },
+  { path: "/dashboard/corte-caja", label: "Corte de Caja", icon: DollarSign },
+  { path: "/dashboard/clientes", label: "Clientes", icon: Users },
+  { path: "/dashboard/promotores", label: "Promotores", icon: Truck },
+  { path: "/dashboard/repartidores", label: "Repartidores", icon: Bike },
+  { path: "/dashboard/cocina", label: "Cocina", icon: ChefHat },
+  { path: "/dashboard/reportes", label: "Reportes", icon: BarChart3 },
+  { path: "/dashboard/descuentos", label: "Descuentos", icon: Tag },
+  { path: "/dashboard/dividir-cuenta", label: "Dividir Cuenta", icon: SplitSquareHorizontal },
   { path: "/dashboard/admin", label: "Panel Admin", icon: ShieldCheck },
   { path: "/dashboard/mapa-mesas", label: "Mapa de Mesas", icon: LayoutGrid },
   { path: "/dashboard/inventario", label: "Inventario", icon: Package },
@@ -24,6 +34,32 @@ const clientItems = [
   { path: "/dashboard/historial", label: "Historial Pedidos", icon: ClipboardList },
 ];
 
+function NavItem({ path, label, icon: Icon, badge, active, sidebarOpen, cartCount, onClick }: {
+  path: string; label: string; icon: React.ElementType; badge?: boolean;
+  active: boolean; sidebarOpen: boolean; cartCount?: number; onClick: () => void;
+}) {
+  return (
+    <button
+      onClick={onClick}
+      title={!sidebarOpen ? label : undefined}
+      className={`w-full flex items-center gap-3 px-3 py-2.5 mb-0.5 rounded-lg transition-all relative group ${
+        active ? "text-primary bg-primary/8 font-medium" : "text-gray-400 hover:text-primary hover:bg-primary/5"
+      } ${!sidebarOpen ? "justify-center" : ""}`}
+    >
+      {active && <div className="absolute left-0 top-1 bottom-1 w-0.5 bg-primary rounded-r" />}
+      <div className="relative flex-shrink-0">
+        <Icon className="w-4 h-4" strokeWidth={1.5} />
+        {badge && cartCount != null && cartCount > 0 && (
+          <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-primary text-black rounded-full text-[9px] font-bold flex items-center justify-center">
+            {cartCount > 9 ? "9+" : cartCount}
+          </span>
+        )}
+      </div>
+      {sidebarOpen && <span className="text-xs tracking-wide whitespace-nowrap">{label}</span>}
+    </button>
+  );
+}
+
 export default function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -32,29 +68,8 @@ export default function Layout() {
 
   const isActive = (path: string) => location.pathname === path;
 
-  const NavItem = ({ path, label, icon: Icon, badge }: { path: string; label: string; icon: React.ElementType; badge?: boolean }) => {
-    const active = isActive(path);
-    return (
-      <button
-        onClick={() => navigate(path)}
-        title={!sidebarOpen ? label : undefined}
-        className={`w-full flex items-center gap-3 px-3 py-2.5 mb-0.5 rounded-lg transition-all relative group ${
-          active ? "text-[#D4AF37] bg-[#D4AF37]/8 font-medium" : "text-gray-400 hover:text-[#D4AF37] hover:bg-[#D4AF37]/5"
-        } ${!sidebarOpen ? "justify-center" : ""}`}
-      >
-        {active && <div className="absolute left-0 top-1 bottom-1 w-0.5 bg-[#D4AF37] rounded-r" />}
-        <div className="relative flex-shrink-0">
-          <Icon className="w-4 h-4" strokeWidth={1.5} />
-          {badge && cartCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#D4AF37] text-black rounded-full text-[9px] font-bold flex items-center justify-center">
-              {cartCount > 9 ? "9+" : cartCount}
-            </span>
-          )}
-        </div>
-        {sidebarOpen && <span className="text-xs tracking-wide whitespace-nowrap">{label}</span>}
-      </button>
-    );
-  };
+  const filteredAdminItems = adminItems.filter(item => canAccess(userRole, item.path));
+  const filteredClientItems = clientItems.filter(item => canAccess(userRole, item.path));
 
   return (
     <div className="flex h-screen bg-background text-foreground transition-colors duration-300 overflow-hidden">
@@ -66,7 +81,7 @@ export default function Layout() {
         {/* Logo */}
         <div className="flex justify-center pt-5 pb-2">
           <div
-            className="rounded-full overflow-hidden border-2 border-[#D4AF37]/60 flex-shrink-0 transition-all duration-300"
+            className="rounded-full overflow-hidden border-2 border-primary/60 flex-shrink-0 transition-all duration-300"
             style={{
               width: sidebarOpen ? "64px" : "38px",
               height: sidebarOpen ? "64px" : "38px",
@@ -81,7 +96,7 @@ export default function Layout() {
         <div className={`flex ${sidebarOpen ? "justify-start px-4" : "justify-center"} pb-4`}>
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="text-[#D4AF37] hover:text-[#F4D03F] transition-colors p-1"
+            className="text-primary hover:text-[#F4D03F] transition-colors p-1"
           >
             {sidebarOpen ? <X className="w-4 h-4" strokeWidth={1.5} /> : <Menu className="w-4 h-4" strokeWidth={1.5} />}
           </button>
@@ -95,7 +110,9 @@ export default function Layout() {
               <p className="text-[9px] tracking-[0.2em] text-gray-500 uppercase px-3 mb-2 font-semibold">Administración</p>
             )}
             {!sidebarOpen && <div className="border-t border-border my-1 mx-2" />}
-            {adminItems.map((item) => <NavItem key={item.path} {...item} />)}
+            {filteredAdminItems.map((item) => (
+              <NavItem key={item.path} {...item} active={isActive(item.path)} sidebarOpen={sidebarOpen} onClick={() => navigate(item.path)} />
+            ))}
           </div>
 
           {/* Client section */}
@@ -104,7 +121,56 @@ export default function Layout() {
               <p className="text-[9px] tracking-[0.2em] text-gray-500 uppercase px-3 mb-2 font-semibold">Punto de Venta</p>
             )}
             {!sidebarOpen && <div className="border-t border-border my-1 mx-2" />}
-            {clientItems.map((item) => <NavItem key={item.path} {...item} />)}
+            {filteredClientItems.map((item) => (
+              <NavItem key={item.path} {...item} active={isActive(item.path)} sidebarOpen={sidebarOpen} cartCount={item.badge ? cartCount : undefined} onClick={() => navigate(item.path)} />
+            ))}
+          </div>
+
+          {/* Platforms section */}
+          <div>
+            {sidebarOpen && (
+              <p className="text-[9px] tracking-[0.2em] text-gray-500 uppercase px-3 mb-2 font-semibold">Plataformas</p>
+            )}
+            {!sidebarOpen && <div className="border-t border-border my-1 mx-2" />}
+            <a
+              href="https://www.ubereats.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              title={!sidebarOpen ? "Uber Eats" : undefined}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 mb-0.5 rounded-lg transition-all text-gray-400 hover:text-emerald-400 hover:bg-emerald-400/5 ${!sidebarOpen ? "justify-center" : ""}`}
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 flex-shrink-0" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-4-4 1.41-1.41L11 14.17l6.59-6.59L19 9l-8 8z"/>
+              </svg>
+              {sidebarOpen && <span className="text-xs tracking-wide whitespace-nowrap">Uber Eats</span>}
+              {sidebarOpen && <ExternalLink className="w-3 h-3 ml-auto text-gray-600" />}
+            </a>
+            <a
+              href="https://www.rappi.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              title={!sidebarOpen ? "Rappi" : undefined}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 mb-0.5 rounded-lg transition-all text-gray-400 hover:text-orange-400 hover:bg-orange-400/5 ${!sidebarOpen ? "justify-center" : ""}`}
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 flex-shrink-0" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-4-4 1.41-1.41L11 14.17l6.59-6.59L19 9l-8 8z"/>
+              </svg>
+              {sidebarOpen && <span className="text-xs tracking-wide whitespace-nowrap">Rappi</span>}
+              {sidebarOpen && <ExternalLink className="w-3 h-3 ml-auto text-gray-600" />}
+            </a>
+            <a
+              href="https://www.didi-food.com"
+              target="_blank"
+              rel="noopener noreferrer"
+              title={!sidebarOpen ? "Didi Food" : undefined}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 mb-0.5 rounded-lg transition-all text-gray-400 hover:text-red-400 hover:bg-red-400/5 ${!sidebarOpen ? "justify-center" : ""}`}
+            >
+              <svg viewBox="0 0 24 24" className="w-4 h-4 flex-shrink-0" fill="currentColor">
+                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15l-4-4 1.41-1.41L11 14.17l6.59-6.59L19 9l-8 8z"/>
+              </svg>
+              {sidebarOpen && <span className="text-xs tracking-wide whitespace-nowrap">Didi Food</span>}
+              {sidebarOpen && <ExternalLink className="w-3 h-3 ml-auto text-gray-600" />}
+            </a>
           </div>
         </div>
 
@@ -113,7 +179,7 @@ export default function Layout() {
           <button
             onClick={async () => { await logout(); navigate("/"); }}
             title={!sidebarOpen ? "Cerrar Sesión" : undefined}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 hover:text-[#D4AF37] rounded-lg transition-colors ${
+            className={`w-full flex items-center gap-3 px-3 py-2.5 text-gray-500 hover:text-primary rounded-lg transition-colors ${
               !sidebarOpen ? "justify-center" : ""
             }`}
           >
@@ -131,34 +197,35 @@ export default function Layout() {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2 px-2.5 py-1 bg-background border border-border rounded-lg">
               <span className="text-[10px] tracking-widest text-gray-500 uppercase font-semibold">Rol:</span>
-              <span className="text-xs text-[#D4AF37] font-semibold capitalize">{userRole}</span>
+              <span className="text-xs text-primary font-semibold capitalize">{roleLabels[userRole] || userRole}</span>
             </div>
 
             <button
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-              className="w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center text-foreground hover:text-[#D4AF37] transition-all cursor-pointer"
+              className="w-8 h-8 rounded-lg bg-background border border-border flex items-center justify-center text-foreground hover:text-primary transition-all cursor-pointer"
               title={theme === "dark" ? "Modo Claro" : "Modo Oscuro"}
             >
-              {theme === "dark" ? <Sun className="w-4 h-4 text-[#D4AF37]" /> : <Moon className="w-4 h-4 text-[#b3922e]" />}
+              {theme === "dark" ? <Sun className="w-4 h-4 text-primary" /> : <Moon className="w-4 h-4 text-[#b3922e]" />}
             </button>
           </div>
 
           {/* Right: Cart shortcut & User */}
           <div className="flex items-center gap-5">
+            <NotificacionesBell />
             <button
               onClick={() => navigate("/dashboard/carrito")}
-              className="relative text-[#D4AF37] hover:text-[#F4D03F] transition-colors"
+              className="relative text-primary hover:text-[#F4D03F] transition-colors"
             >
               <ShoppingCart className="w-5 h-5" strokeWidth={1.5} />
               {cartCount > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-[#D4AF37] text-black rounded-full text-[9px] font-bold flex items-center justify-center">
+                <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-primary text-black rounded-full text-[9px] font-bold flex items-center justify-center">
                   {cartCount > 9 ? "9+" : cartCount}
                 </span>
               )}
             </button>
 
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#D4AF37] to-[#F4D03F] flex items-center justify-center">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-[#F4D03F] flex items-center justify-center">
                 <span className="text-black text-xs font-semibold uppercase">
                   {userName.split(" ").map((n: string) => n[0]).join("").slice(0, 2)}
                 </span>

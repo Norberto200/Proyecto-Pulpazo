@@ -1,22 +1,14 @@
-import { useState, useRef } from "react";
+﻿import { useState, useRef } from "react";
 import { useNavigate } from "react-router";
 import { Clock, X, ChevronRight, UtensilsCrossed, Plus } from "lucide-react";
 import { useApp, Table, TableShape, TableStatus } from "../context/AppContext";
-
-const statusLabel: Record<TableStatus, string> = {
-  libre: "Libre",
-  ocupado: "Ocupado",
-  reservado: "Reservado",
-};
-
-const statusColor: Record<TableStatus, string> = {
-  libre: "#22c55e",
-  ocupado: "#ef4444",
-  reservado: "#f97316",
-};
+import { statusColor, statusLabel } from "../lib/utils";
 
 export default function MapaMesas() {
-  const { tables, updateTable, addTable, removeTable, userRole } = useApp();
+  const { tables, updateTable, addTable, removeTable, userRole, orders, updateOrderStatus, setCurrentTableId } = useApp();
+
+  const canEditTables = userRole === "administrador" || userRole === "cajera";
+  const canCloseTable = userRole === "administrador" || userRole === "cajera";
   const [selectedTableId, setSelectedTableId] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
   const navigate = useNavigate();
@@ -40,6 +32,10 @@ export default function MapaMesas() {
 
   const handleLiberar = () => {
     if (!selectedTableId) return;
+    // Mark pending orders for this table as completado
+    orders
+      .filter((o) => o.table === selectedTableId && o.status === "pendiente")
+      .forEach((o) => updateOrderStatus(o.id, "completado"));
     updateTable(selectedTableId, { status: "libre", time: undefined });
   };
 
@@ -130,7 +126,7 @@ export default function MapaMesas() {
           {/* Header row */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 border-b border-border pb-4">
             <div>
-              <h2 className="text-xl text-[#D4AF37] tracking-wide">Plano de Mesas</h2>
+              <h2 className="text-xl text-primary tracking-wide">Plano de Mesas</h2>
               <p className="text-gray-500 text-xs mt-0.5">
                 {editMode ? "Arrastra las mesas libremente por el mapa para posicionarlas" : "Administra las mesas y reservas actuales"}
               </p>
@@ -140,14 +136,14 @@ export default function MapaMesas() {
               {editMode && (
                 <button
                   onClick={handleAddTable}
-                  className="px-3.5 py-1.5 bg-[#D4AF37] hover:bg-[#C9A830] text-black rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer"
+                  className="px-3.5 py-1.5 bg-primary hover:bg-[#C9A830] text-black rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer"
                 >
                   ＋ Agregar Mesa
                 </button>
               )}
 
               {/* Only admin and cajera can edit tables */}
-              {userRole !== "mesero" && (
+              {canEditTables && (
                 <button
                   onClick={() => {
                     setEditMode(!editMode);
@@ -155,7 +151,7 @@ export default function MapaMesas() {
                   }}
                   className={`px-3.5 py-1.5 border rounded-lg text-xs font-semibold tracking-wide transition-colors cursor-pointer ${
                     editMode
-                      ? "border-[#D4AF37] text-[#D4AF37] bg-[#D4AF37]/8"
+                      ? "border-primary text-primary bg-primary/8"
                       : "border-border text-gray-500 hover:text-foreground"
                   }`}
                 >
@@ -219,7 +215,7 @@ export default function MapaMesas() {
                 const cy = table.type === "circular" ? table.y : table.y + h / 2;
                 
                 const chairFill = "var(--card)";
-                const chairStroke = isSelected ? "#D4AF37" : color;
+                const chairStroke = isSelected ? "var(--primary)" : color;
 
                 return (
                   <g
@@ -241,7 +237,7 @@ export default function MapaMesas() {
                         {/* Table surface */}
                         <circle cx={0} cy={0} r={r}
                           fill={color} fillOpacity={0.85}
-                          stroke={isSelected ? "#D4AF37" : "rgba(255,255,255,0.15)"}
+                          stroke={isSelected ? "var(--primary)" : "rgba(255,255,255,0.15)"}
                           strokeWidth={isSelected ? 1.8 : 1}
                         />
                         {/* Surface gloss */}
@@ -264,7 +260,7 @@ export default function MapaMesas() {
                         {/* Table surface */}
                         <rect x={-w/2} y={-h/2} width={w} height={h} rx={5}
                           fill={color} fillOpacity={0.85}
-                          stroke={isSelected ? "#D4AF37" : "rgba(255,255,255,0.15)"}
+                          stroke={isSelected ? "var(--primary)" : "rgba(255,255,255,0.15)"}
                           strokeWidth={isSelected ? 1.8 : 1}
                         />
                         {/* Surface gloss */}
@@ -302,12 +298,12 @@ export default function MapaMesas() {
           <div className="w-[300px] flex flex-col h-full p-6">
             {/* Panel header */}
             <div className="flex items-center justify-between mb-6">
-              <h3 className="text-sm tracking-[0.18em] text-[#D4AF37] uppercase font-semibold">
+              <h3 className="text-sm tracking-[0.18em] text-primary uppercase font-semibold">
                 {editMode ? "Configurar Mesa" : "Detalle de Mesa"}
               </h3>
               <button
                 onClick={closePanel}
-                className="text-gray-500 hover:text-[#D4AF37] transition-colors cursor-pointer"
+                className="text-gray-500 hover:text-primary transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" strokeWidth={1.5} />
               </button>
@@ -322,7 +318,7 @@ export default function MapaMesas() {
                     type="text"
                     value={selectedTable.name}
                     onChange={(e) => updateTable(selectedTable.id, { name: e.target.value })}
-                    className="w-full bg-background border border-border rounded-lg py-2 px-3 text-foreground text-xs focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-background border border-border rounded-lg py-2 px-3 text-foreground text-xs focus:outline-none focus:border-primary"
                   />
                 </div>
 
@@ -342,7 +338,7 @@ export default function MapaMesas() {
                       }
                       updateTable(selectedTable.id, updates);
                     }}
-                    className="w-full bg-background border border-border rounded-lg py-2 px-3 text-foreground text-xs focus:outline-none focus:border-[#D4AF37]"
+                    className="w-full bg-background border border-border rounded-lg py-2 px-3 text-foreground text-xs focus:outline-none focus:border-primary"
                   >
                     <option value="rectangular">Rectangular</option>
                     <option value="circular">Circular</option>
@@ -361,7 +357,7 @@ export default function MapaMesas() {
                     max="360"
                     value={selectedTable.rotation || 0}
                     onChange={(e) => updateTable(selectedTable.id, { rotation: parseInt(e.target.value) })}
-                    className="w-full accent-[#D4AF37]"
+                    className="w-full accent-primary"
                   />
                 </div>
 
@@ -378,7 +374,7 @@ export default function MapaMesas() {
                       max="60"
                       value={selectedTable.radius || 30}
                       onChange={(e) => updateTable(selectedTable.id, { radius: parseInt(e.target.value) })}
-                      className="w-full accent-[#D4AF37]"
+                      className="w-full accent-primary"
                     />
                   </div>
                 ) : (
@@ -394,7 +390,7 @@ export default function MapaMesas() {
                         max="140"
                         value={selectedTable.width || 80}
                         onChange={(e) => updateTable(selectedTable.id, { width: parseInt(e.target.value) })}
-                        className="w-full accent-[#D4AF37]"
+                        className="w-full accent-primary"
                       />
                     </div>
                     <div>
@@ -408,7 +404,7 @@ export default function MapaMesas() {
                         max="100"
                         value={selectedTable.height || 40}
                         onChange={(e) => updateTable(selectedTable.id, { height: parseInt(e.target.value) })}
-                        className="w-full accent-[#D4AF37]"
+                        className="w-full accent-primary"
                       />
                     </div>
                   </div>
@@ -452,7 +448,7 @@ export default function MapaMesas() {
                   <div className="bg-background rounded-lg p-4 border border-border shadow-sm">
                     <p className="text-[10px] tracking-widest text-gray-500 uppercase mb-2">Tiempo en Mesa</p>
                     <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-[#D4AF37]" strokeWidth={1.5} />
+                      <Clock className="w-4 h-4 text-primary" strokeWidth={1.5} />
                       <span className="text-foreground font-semibold">{selectedTable.time}</span>
                     </div>
                   </div>
@@ -467,11 +463,11 @@ export default function MapaMesas() {
                   <>
                     <button
                       onClick={() => {
-                        // Iniciar venta directo: actualiza estado a ocupado y navega al menú
-                        updateTable(selectedTable.id, { status: "ocupado", time: "00:01 h" });
-                        navigate("/dashboard/cliente-menu", { state: { tableId: selectedTable.id } });
+                        // Set current table in context (table stays libre until order is placed)
+                        setCurrentTableId(selectedTable.id);
+                        navigate("/dashboard/cliente-menu");
                       }}
-                      className="w-full bg-[#D4AF37] hover:bg-[#C9A830] text-black py-3 rounded-lg text-xs tracking-[0.18em] uppercase font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                      className="w-full bg-primary hover:bg-[#C9A830] text-black py-3 rounded-lg text-xs tracking-[0.18em] uppercase font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                     >
                       <UtensilsCrossed className="w-3.5 h-3.5" /> Iniciar Venta / Abrir
                     </button>
@@ -487,16 +483,16 @@ export default function MapaMesas() {
                   <>
                     <button
                       onClick={() => {
-                        // Redirigir a tomar pedido pre-seleccionando la mesa
-                        navigate("/dashboard/cliente-menu", { state: { tableId: selectedTable.id } });
+                        setCurrentTableId(selectedTable.id);
+                        navigate("/dashboard/cliente-menu");
                       }}
-                      className="w-full bg-[#D4AF37] hover:bg-[#C9A830] text-black py-3 rounded-lg text-xs tracking-[0.18em] uppercase font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
+                      className="w-full bg-primary hover:bg-[#C9A830] text-black py-3 rounded-lg text-xs tracking-[0.18em] uppercase font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer shadow-sm"
                     >
                       <Plus className="w-3.5 h-3.5" /> Agregar a Orden
                     </button>
                     
                     {/* Only cashier and admin can close account (liberar mesa) */}
-                    {userRole !== "mesero" && (
+                    {canCloseTable && (
                       <button
                         onClick={handleLiberar}
                         className="w-full border border-border text-foreground hover:bg-[#ef4444]/10 hover:text-[#ef4444] hover:border-[#ef4444]/30 py-3 rounded-lg text-xs tracking-[0.18em] uppercase transition-all cursor-pointer"
