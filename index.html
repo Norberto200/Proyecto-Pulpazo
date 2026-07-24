@@ -1,23 +1,706 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>El Pulpazo - Prototipo Interactivo</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script>
+    function navegar(pantalla) {
+      document.querySelectorAll('.screen').forEach(function(s) { s.classList.remove('active'); });
+      if (pantalla === 'login') {
+        document.getElementById('dashboard-layout').classList.remove('active');
+        document.getElementById('screen-login').classList.add('active');
+        try { lucide.createIcons(); } catch(e) {}
+        return;
+      }
+      document.getElementById('dashboard-layout').classList.add('active');
+      document.getElementById('screen-login').classList.remove('active');
+      var screenMap = {
+        'mapa-mesas': 'screen-mapa-mesas', 'dashboard': 'screen-dashboard',
+        'menu': 'screen-menu', 'carrito': 'screen-carrito',
+        'carrito-exito': 'screen-carrito-exito', 'cocina': 'screen-cocina',
+        'corte-caja': 'screen-corte-caja', 'inventario': 'screen-inventario',
+        'clientes': 'screen-clientes', 'promotores': 'screen-promotores',
+        'repartidores': 'screen-repartidores', 'reportes': 'screen-reportes',
+        'descuentos': 'screen-descuentos', 'dividir': 'screen-dividir',
+        'historial': 'screen-historial', 'admin': 'screen-admin',
+        'mas-info': 'screen-mas-info',
+      };
+      var screenId = screenMap[pantalla];
+      if (screenId) { var el = document.getElementById(screenId); if (el) el.classList.add('active'); }
+      document.querySelectorAll('.nav-item').forEach(function(n) { n.classList.remove('active'); });
+      try { lucide.createIcons(); } catch(e) {}
+      window.scrollTo(0, 0);
+    }
+  </script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/lucide@latest" async></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { DEFAULT: '#D4AF37', light: '#F4D03F', dark: '#C9A830' },
+            darkBg: '#0d0d0d',
+            cardBg: '#111111',
+            surface: '#161616',
+          },
+          fontFamily: { sans: ['Outfit', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { scrollbar-width: thin; scrollbar-color: #D4AF37 #111; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #111; }
+    ::-webkit-scrollbar-thumb { background: #D4AF37; border-radius: 3px; }
+    .screen { display: none !important; }
+    .screen.active { display: block !important; }
+    #dashboard-layout { display: none !important; }
+    #dashboard-layout.active { display: flex !important; }
+    .nav-item { transition: all 0.15s; }
+    .nav-item:hover, .nav-item.active { background: rgba(212,175,55,0.1); color: #D4AF37; }
+    .kanban-col { min-height: 300px; }
+    .dish-card:hover .dish-img { transform: scale(1.05); }
+    .modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:50; align-items:center; justify-content:center; }
+    .modal-overlay.active { display:flex; }
+  </style>
+</head>
+<body class="bg-darkBg text-white min-h-screen font-sans overflow-x-hidden">
 
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      
-      <meta charset="UTF-8" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Prototipo de gestión de restaurante</title>
-      <meta name="description" content="Manage restaurant operations efficiently with an interactive table map, menu management, and user-friendly login, tailored for upscale dining experiences." />
-      <meta name="robots" content="noindex, nofollow" />
-      <style>html, body { height: 100%; margin: 0; } #root { height: 100%; }</style>
-      
-      <script type="module" crossorigin src="/Proyecto-Pulpazo/assets/index-Cdfh0-oT.js"></script>
-      <link rel="stylesheet" crossorigin href="/Proyecto-Pulpazo/assets/index-DStxcUVE.css">
-    </head>
+<!-- ==================== LOGIN ==================== -->
+<div id="screen-login" class="screen active min-h-screen flex items-center justify-center px-4" style="background:radial-gradient(ellipse at 60% 40%, #1a1500 0%, #0d0d0d 55%, #080808 100%)">
+  <div class="relative w-full max-w-md rounded-2xl px-10 py-10" style="background:rgba(22,18,8,0.72); border:1px solid rgba(212,175,55,0.18); box-shadow:0 8px 48px rgba(0,0,0,0.6)">
+    <div class="flex flex-col items-center mb-6">
+      <div class="rounded-full border-2 border-primary/60 w-28 h-28 flex items-center justify-center" style="box-shadow:0 0 28px rgba(212,175,55,0.45)">
+        <i data-lucide="fish" class="w-14 h-14 text-primary"></i>
+      </div>
+      <h1 class="text-3xl font-bold tracking-[0.22em] mt-4 text-primary">EL PULPAZO</h1>
+      <p class="text-sm tracking-wider text-gray-400 mt-1">Management System Access</p>
+    </div>
+    <div class="space-y-5 mt-8">
+      <div>
+        <label for="login-email" class="block text-[10px] tracking-[0.18em] text-gray-400 uppercase mb-2">Correo Electrónico</label>
+        <div class="relative">
+          <div class="absolute left-4 top-1/2 -translate-y-1/2"><i data-lucide="user" class="w-4 h-4 text-primary"></i></div>
+          <input id="login-email" type="email" value="admin@elpulpazo.com" class="w-full bg-[#0d0d0d]/60 border border-primary/25 rounded-lg py-3.5 pl-11 pr-4 text-white text-sm focus:outline-none focus:border-primary/70">
+        </div>
+      </div>
+      <div>
+        <label for="login-password" class="block text-[10px] tracking-[0.18em] text-gray-400 uppercase mb-2">Contraseña</label>
+        <div class="relative">
+          <div class="absolute left-4 top-1/2 -translate-y-1/2"><i data-lucide="lock" class="w-4 h-4 text-primary"></i></div>
+          <input id="login-password" type="password" value="••••••••" class="w-full bg-[#0d0d0d]/60 border border-primary/25 rounded-lg py-3.5 pl-11 pr-4 text-white text-sm focus:outline-none focus:border-primary/70">
+        </div>
+      </div>
+      <button type="button" onclick="navegar('mapa-mesas')" class="w-full bg-primary hover:bg-primary-dark text-black py-3.5 rounded-lg flex items-center justify-center gap-3 transition-all group cursor-pointer">
+        <span class="tracking-[0.18em] text-sm font-semibold">INICIAR SESIÓN</span>
+        <i data-lucide="arrow-right" class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+      </button>
+    </div>
+    <div class="mt-6 text-center">
+      <span class="text-xs text-gray-600">Prototipo interactivo — haz clic para navegar</span>
+    </div>
+  </div>
+</div>
 
-    <body>
-      
-      <div id="root"></div>
-      
-    </body>
-  </html>
-  
+<!-- ==================== DASHBOARD LAYOUT ==================== -->
+<div id="dashboard-layout" class="min-h-screen">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar" class="fixed left-0 top-0 h-full bg-cardBg border-r border-primary/10 z-40 transition-all duration-300" style="width:260px">
+    <div class="p-4 border-b border-primary/10 flex items-center gap-3">
+      <div class="w-10 h-10 rounded-full border border-primary/40 flex items-center justify-center flex-shrink-0" style="box-shadow:0 0 12px rgba(212,175,55,0.3)">
+        <i data-lucide="fish" class="w-5 h-5 text-primary"></i>
+      </div>
+      <div>
+        <h2 class="text-sm font-bold text-primary tracking-wider">EL PULPAZO</h2>
+        <p class="text-[10px] text-gray-500">Sistema de Gestión</p>
+      </div>
+    </div>
+    <nav class="p-3 space-y-1 overflow-y-auto" style="max-height:calc(100vh - 60px)">
+      <p class="text-[9px] tracking-[0.2em] text-gray-600 uppercase px-3 pt-2 pb-1 font-semibold">Administración</p>
+      <a onclick="navegar('dashboard')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="trending-up" class="w-4 h-4"></i> Dashboard Ejecutivo</a>
+      <a onclick="navegar('corte-caja')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="dollar-sign" class="w-4 h-4"></i> Corte de Caja</a>
+      <a onclick="navegar('clientes')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="users" class="w-4 h-4"></i> Clientes</a>
+      <a onclick="navegar('promotores')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="truck" class="w-4 h-4"></i> Promotores</a>
+      <a onclick="navegar('repartidores')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="bike" class="w-4 h-4"></i> Repartidores</a>
+      <a onclick="navegar('cocina')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="chef-hat" class="w-4 h-4"></i> Cocina</a>
+      <a onclick="navegar('reportes')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="bar-chart-3" class="w-4 h-4"></i> Reportes</a>
+      <a onclick="navegar('descuentos')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="tag" class="w-4 h-4"></i> Descuentos</a>
+      <a onclick="navegar('dividir')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="split-square-horizontal" class="w-4 h-4"></i> Dividir Cuenta</a>
+      <a onclick="navegar('admin')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="shield-check" class="w-4 h-4"></i> Panel Admin</a>
+      <a onclick="navegar('mapa-mesas')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="layout-grid" class="w-4 h-4"></i> Mapa de Mesas</a>
+      <a onclick="navegar('inventario')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="package" class="w-4 h-4"></i> Inventario</a>
+      <a onclick="navegar('mas-info')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="info" class="w-4 h-4"></i> Más Información</a>
+
+      <p class="text-[9px] tracking-[0.2em] text-gray-600 uppercase px-3 pt-4 pb-1 font-semibold">Punto de Venta</p>
+      <a onclick="navegar('menu')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="book-open" class="w-4 h-4"></i> Tomar Pedido</a>
+      <a onclick="navegar('carrito')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="shopping-cart" class="w-4 h-4"></i> Pedido Actual <span class="ml-auto bg-primary text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full">3</span></a>
+      <a onclick="navegar('historial')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="clipboard-list" class="w-4 h-4"></i> Historial Pedidos</a>
+
+      <p class="text-[9px] tracking-[0.2em] text-gray-600 uppercase px-3 pt-4 pb-1 font-semibold">Plataformas</p>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="external-link" class="w-4 h-4"></i> Uber Eats</a>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="external-link" class="w-4 h-4"></i> Rappi</a>
+      <a class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="external-link" class="w-4 h-4"></i> Didi Food</a>
+
+      <div class="border-t border-primary/10 mt-4 pt-4">
+        <a onclick="navegar('login')" class="nav-item flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-400 cursor-pointer text-xs"><i data-lucide="log-out" class="w-4 h-4"></i> Cerrar Sesión</a>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <div class="min-h-screen flex flex-col overflow-x-hidden flex-1 min-w-0" style="margin-left:260px">
+
+    <!-- HEADER -->
+    <header class="h-14 border-b border-primary/10 bg-cardBg/80 backdrop-blur flex items-center justify-between px-6 sticky top-0 z-30">
+      <div class="flex items-center gap-3">
+        <span class="px-2 py-0.5 bg-primary/10 border border-primary/20 text-primary text-[10px] rounded font-semibold uppercase">Administrador</span>
+      </div>
+      <div class="flex items-center gap-4">
+        <button class="relative text-gray-400 hover:text-primary transition-colors"><i data-lucide="bell" class="w-4 h-4"></i><span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full text-[8px] flex items-center justify-center text-white font-bold">2</span></button>
+        <button onclick="navegar('carrito')" class="relative text-gray-400 hover:text-primary transition-colors cursor-pointer"><i data-lucide="shopping-cart" class="w-4 h-4"></i><span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-primary rounded-full text-[8px] flex items-center justify-center text-black font-bold">3</span></button>
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary text-xs font-bold">AM</div>
+          <span class="text-xs text-gray-400">Alejandro M.</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- SCREENS CONTAINER -->
+    <div class="flex-1 p-6 overflow-x-hidden w-full">
+
+      <!-- ========== MAPA DE MESAS ========== -->
+      <div id="screen-mapa-mesas" class="screen">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h1 class="text-xl font-bold text-white tracking-wide">Plano de Mesas</h1>
+            <div class="flex items-center gap-4 mt-2 text-[10px]">
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-green-500"></span> Libre (6)</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span> Ocupado (4)</span>
+              <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-red-500"></span> Reservado (2)</span>
+            </div>
+          </div>
+          <button class="text-[10px] px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary rounded-lg hover:bg-primary/20 transition">Editar Mesas</button>
+        </div>
+        <div class="bg-cardBg border border-primary/15 rounded-xl p-6 relative" style="height:420px">
+          <svg viewBox="0 0 800 380" class="w-full h-full">
+            <defs><pattern id="grid" width="30" height="30" patternUnits="userSpaceOnUse"><path d="M 30 0 L 0 0 0 30" fill="none" stroke="rgba(212,175,55,0.04)" stroke-width="0.5"/></pattern></defs>
+            <rect width="800" height="380" fill="url(#grid)"/>
+            <!-- Mesa 1 - Libre -->
+            <g onclick="navegar('menu')" class="cursor-pointer"><circle cx="100" cy="100" r="30" fill="#22c55e" fill-opacity="0.85" stroke="rgba(255,255,255,0.15)"/><text x="100" y="104" text-anchor="middle" fill="white" font-size="11" font-weight="700">Mesa 1</text>
+            <circle cx="100" cy="62" r="7" fill="#1e1e1e" stroke="#22c55e" stroke-width="0.8"/><circle cx="100" cy="138" r="7" fill="#1e1e1e" stroke="#22c55e" stroke-width="0.8"/><circle cx="62" cy="100" r="7" fill="#1e1e1e" stroke="#22c55e" stroke-width="0.8"/><circle cx="138" cy="100" r="7" fill="#1e1e1e" stroke="#22c55e" stroke-width="0.8"/></g>
+            <!-- Mesa 2 - Ocupado -->
+            <g class="cursor-pointer"><rect x="205" y="75" width="70" height="50" rx="6" fill="#f59e0b" fill-opacity="0.85" stroke="rgba(255,255,255,0.15)"/><text x="240" y="104" text-anchor="middle" fill="white" font-size="11" font-weight="700">Mesa 2</text>
+            <rect x="215" y="60" width="22" height="8" rx="2" fill="#1e1e1e" stroke="#f59e0b" stroke-width="0.8"/><rect x="245" y="60" width="22" height="8" rx="2" fill="#1e1e1e" stroke="#f59e0b" stroke-width="0.8"/><rect x="215" y="132" width="22" height="8" rx="2" fill="#1e1e1e" stroke="#f59e0b" stroke-width="0.8"/><rect x="245" y="132" width="22" height="8" rx="2" fill="#1e1e1e" stroke="#f59e0b" stroke-width="0.8"/></g>
+            <!-- Mesa 3 - Libre -->
+            <g onclick="navegar('menu')" class="cursor-pointer"><circle cx="400" cy="100" r="30" fill="#22c55e" fill-opacity="0.85" stroke="rgba(255,255,255,0.15)"/><text x="400" y="104" text-anchor="middle" fill="white" font-size="11" font-weight="700">Mesa 3</text>
+            <circle cx="400" cy="62" r="7" fill="#1e1e1e" stroke="#22c55e" stroke-width="0.8"/><circle cx="400" cy="138" r="7" fill="#1e1e1e" stroke="#22c55e" stroke-width="0.8"/><circle cx="362" cy="100" r="7" fill="#1e1e1e" stroke="#22c55e" stroke-width="0.8"/><circle cx="438" cy="100" r="7" fill="#1e1e1e" stroke="#22c55e" stroke-width="0.8"/></g>
+            <!-- Mesa 4 - Reservado -->
+            <g class="cursor-pointer"><rect x="525" y="75" width="70" height="50" rx="6" fill="#ef4444" fill-opacity="0.85" stroke="rgba(255,255,255,0.15)"/><text x="560" y="104" text-anchor="middle" fill="white" font-size="11" font-weight="700">Mesa 4</text>
+            <rect x="535" y="60" width="22" height="8" rx="2" fill="#1e1e1e" stroke="#ef4444" stroke-width="0.8"/><rect x="565" y="60" width="22" height="8" rx="2" fill="#1e1e1e" stroke="#ef4444" stroke-width="0.8"/><rect x="535" y="132" width="22" height="8" rx="2" fill="#1e1e1e" stroke="#ef4444" stroke-width="0.8"/><rect x="565" y="132" width="22" height="8" rx="2" fill="#1e1e1e" stroke="#ef4444" stroke-width="0.8"/></g>
+            <!-- Mesa 5 - Ocupado -->
+            <g class="cursor-pointer"><circle cx="700" cy="100" r="30" fill="#f59e0b" fill-opacity="0.85" stroke="rgba(255,255,255,0.15)"/><text x="700" y="104" text-anchor="middle" fill="white" font-size="11" font-weight="700">Mesa 5</text>
+            <circle cx="700" cy="62" r="7" fill="#1e1e1e" stroke="#f59e0b" stroke-width="0.8"/><circle cx="700" cy="138" r="7" fill="#1e1e1e" stroke="#f59e0b" stroke-width="0.8"/><circle cx="662" cy="100" r="7" fill="#1e1e1e" stroke="#f59e0b" stroke-width="0.8"/><circle cx="738" cy="100" r="7" fill="#1e1e1e" stroke="#f59e0b" stroke-width="0.8"/></g>
+            <!-- Mesa 6 - Libre -->
+            <g onclick="navegar('menu')" class="cursor-pointer"><circle cx="150" cy="280" r="30" fill="#22c55e" fill-opacity="0.85" stroke="rgba(255,255,255,0.15)"/><text x="150" y="284" text-anchor="middle" fill="white" font-size="11" font-weight="700">Mesa 6</text>
+            <circle cx="150" cy="242" r="7" fill="#1e1e1e" stroke="#22c55e" stroke-width="0.8"/><circle cx="150" cy="318" r="7" fill="#1e1e1e" stroke="#22c55e" stroke-width="0.8"/><circle cx="112" cy="280" r="7" fill="#1e1e1e" stroke="#22c55e" stroke-width="0.8"/><circle cx="188" cy="280" r="7" fill="#1e1e1e" stroke="#22c55e" stroke-width="0.8"/></g>
+            <!-- Mesa 7 - Libre -->
+            <g onclick="navegar('menu')" class="cursor-pointer"><rect x="280" y="255" width="70" height="50" rx="6" fill="#22c55e" fill-opacity="0.85" stroke="rgba(255,255,255,0.15)"/><text x="315" y="284" text-anchor="middle" fill="white" font-size="11" font-weight="700">Mesa 7</text>
+            <rect x="290" y="240" width="22" height="8" rx="2" fill="#1e1e1e" stroke="#22c55e" stroke-width="0.8"/><rect x="320" y="240" width="22" height="8" rx="2" fill="#1e1e1e" stroke="#22c55e" stroke-width="0.8"/><rect x="290" y="312" width="22" height="8" rx="2" fill="#1e1e1e" stroke="#22c55e" stroke-width="0.8"/><rect x="320" y="312" width="22" height="8" rx="2" fill="#1e1e1e" stroke="#22c55e" stroke-width="0.8"/></g>
+            <!-- Mesa 8 - Ocupado -->
+            <g class="cursor-pointer"><circle cx="500" cy="280" r="30" fill="#f59e0b" fill-opacity="0.85" stroke="rgba(255,255,255,0.15)"/><text x="500" y="284" text-anchor="middle" fill="white" font-size="11" font-weight="700">Mesa 8</text>
+            <circle cx="500" cy="242" r="7" fill="#1e1e1e" stroke="#f59e0b" stroke-width="0.8"/><circle cx="500" cy="318" r="7" fill="#1e1e1e" stroke="#f59e0b" stroke-width="0.8"/><circle cx="462" cy="280" r="7" fill="#1e1e1e" stroke="#f59e0b" stroke-width="0.8"/><circle cx="538" cy="280" r="7" fill="#1e1e1e" stroke="#f59e0b" stroke-width="0.8"/></g>
+            <!-- Mesa 9 - Reservado -->
+            <g class="cursor-pointer"><rect x="620" y="255" width="70" height="50" rx="6" fill="#ef4444" fill-opacity="0.85" stroke="rgba(255,255,255,0.15)"/><text x="655" y="284" text-anchor="middle" fill="white" font-size="11" font-weight="700">Mesa 9</text>
+            <rect x="630" y="240" width="22" height="8" rx="2" fill="#1e1e1e" stroke="#ef4444" stroke-width="0.8"/><rect x="660" y="240" width="22" height="8" rx="2" fill="#1e1e1e" stroke="#ef4444" stroke-width="0.8"/><rect x="630" y="312" width="22" height="8" rx="2" fill="#1e1e1e" stroke="#ef4444" stroke-width="0.8"/><rect x="660" y="312" width="22" height="8" rx="2" fill="#1e1e1e" stroke="#ef4444" stroke-width="0.8"/></g>
+          </svg>
+        </div>
+      </div>
+
+      <!-- ========== DASHBOARD EJECUTIVO ========== -->
+      <div id="screen-dashboard" class="screen">
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-xl font-bold text-white tracking-wide">Dashboard Ejecutivo</h1>
+          <span class="text-[10px] bg-primary/10 border border-primary/20 text-primary px-2.5 py-1 rounded font-mono">Marisquería El Pulpazo</span>
+        </div>
+        <!-- Quick Access -->
+        <div class="grid grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+          <button onclick="navegar('mapa-mesas')" class="bg-cardBg border border-primary/15 rounded-xl p-4 text-center hover:border-primary/40 transition cursor-pointer"><i data-lucide="layout-grid" class="w-6 h-6 text-primary mx-auto mb-2"></i><span class="text-[10px] text-gray-400 uppercase tracking-wider">Mapa Mesas</span></button>
+          <button onclick="navegar('menu')" class="bg-cardBg border border-primary/15 rounded-xl p-4 text-center hover:border-primary/40 transition cursor-pointer"><i data-lucide="book-open" class="w-6 h-6 text-primary mx-auto mb-2"></i><span class="text-[10px] text-gray-400 uppercase tracking-wider">Tomar Pedido</span></button>
+          <button onclick="navegar('carrito')" class="bg-cardBg border border-primary/15 rounded-xl p-4 text-center hover:border-primary/40 transition cursor-pointer"><i data-lucide="shopping-cart" class="w-6 h-6 text-primary mx-auto mb-2"></i><span class="text-[10px] text-gray-400 uppercase tracking-wider">Pedido Actual</span></button>
+          <button onclick="navegar('corte-caja')" class="bg-cardBg border border-primary/15 rounded-xl p-4 text-center hover:border-primary/40 transition cursor-pointer"><i data-lucide="dollar-sign" class="w-6 h-6 text-primary mx-auto mb-2"></i><span class="text-[10px] text-gray-400 uppercase tracking-wider">Corte de Caja</span></button>
+          <button onclick="navegar('inventario')" class="bg-cardBg border border-primary/15 rounded-xl p-4 text-center hover:border-primary/40 transition cursor-pointer"><i data-lucide="package" class="w-6 h-6 text-primary mx-auto mb-2"></i><span class="text-[10px] text-gray-400 uppercase tracking-wider">Inventario</span></button>
+          <button onclick="navegar('promotores')" class="bg-cardBg border border-primary/15 rounded-xl p-4 text-center hover:border-primary/40 transition cursor-pointer"><i data-lucide="truck" class="w-6 h-6 text-primary mx-auto mb-2"></i><span class="text-[10px] text-gray-400 uppercase tracking-wider">Promotores</span></button>
+        </div>
+        <!-- Stats -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div onclick="navegar('historial')" class="bg-cardBg border border-primary/15 rounded-xl p-5 cursor-pointer hover:border-primary/40 transition">
+            <div class="flex justify-between items-start mb-3"><span class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Ventas de Hoy</span><i data-lucide="trending-up" class="w-4 h-4 text-primary"></i></div>
+            <p class="text-2xl font-light">$12,450.00</p>
+            <p class="text-[10px] text-green-500 mt-1">↑ +18.3% vs ayer</p>
+          </div>
+          <div onclick="navegar('historial')" class="bg-cardBg border border-primary/15 rounded-xl p-5 cursor-pointer hover:border-primary/40 transition">
+            <div class="flex justify-between items-start mb-3"><span class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Pedidos Activos</span><i data-lucide="shopping-bag" class="w-4 h-4 text-primary"></i></div>
+            <p class="text-2xl font-light">7</p>
+            <p class="text-[10px] text-gray-500 mt-1">En proceso de atención</p>
+          </div>
+          <div onclick="navegar('corte-caja')" class="bg-cardBg border border-primary/15 rounded-xl p-5 cursor-pointer hover:border-primary/40 transition">
+            <div class="flex justify-between items-start mb-3"><span class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Efectivo en Caja</span><i data-lucide="wallet" class="w-4 h-4 text-primary"></i></div>
+            <p class="text-2xl font-light">$4,280.00</p>
+            <p class="text-[10px] text-gray-500 mt-1">Saldo inicial: $2,000</p>
+          </div>
+          <div onclick="navegar('mapa-mesas')" class="bg-cardBg border border-primary/15 rounded-xl p-5 cursor-pointer hover:border-primary/40 transition">
+            <div class="flex justify-between items-start mb-3"><span class="text-[10px] text-gray-500 uppercase tracking-widest font-semibold">Mesas Ocupadas</span><i data-lucide="layout-grid" class="w-4 h-4 text-primary"></i></div>
+            <p class="text-2xl font-light">4/9</p>
+            <div class="w-full h-1.5 bg-[#1a1a1a] rounded-full overflow-hidden mt-2"><div class="h-full bg-gradient-to-r from-primary to-primary-light rounded-full" style="width:44%"></div></div>
+          </div>
+        </div>
+        <!-- Chart -->
+        <div class="bg-cardBg border border-primary/15 rounded-xl p-5 mb-6">
+          <div class="flex items-center justify-between mb-4">
+            <div><h3 class="text-[10px] tracking-[0.18em] text-primary uppercase font-semibold">Tendencia de Ventas Semanales</h3><p class="text-[10px] text-gray-500 mt-0.5">Últimos 7 días</p></div>
+          </div>
+          <div class="relative h-[160px]">
+            <svg viewBox="0 0 600 160" class="w-full h-full">
+              <defs><linearGradient id="sg" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#D4AF37"/><stop offset="100%" stop-color="#F4D03F"/></linearGradient><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="rgba(212,175,55,0.2)"/><stop offset="100%" stop-color="rgba(212,175,55,0)"/></linearGradient></defs>
+              <line x1="30" y1="30" x2="570" y2="30" stroke="rgba(255,255,255,0.03)"/><line x1="30" y1="80" x2="570" y2="80" stroke="rgba(255,255,255,0.03)"/><line x1="30" y1="130" x2="570" y2="130" stroke="rgba(255,255,255,0.06)"/>
+              <path d="M30 110 C120 110,120 60,210 60 C300 60,300 90,390 90 C480 90,480 35,570 35 L570 130 L30 130Z" fill="url(#ag)"/>
+              <path d="M30 110 C120 110,120 60,210 60 C300 60,300 90,390 90 C480 90,480 35,570 35" fill="none" stroke="url(#sg)" stroke-width="2.5"/>
+              <circle cx="30" cy="110" r="3.5" fill="#111" stroke="#D4AF37" stroke-width="1.5"/><circle cx="120" cy="85" r="3.5" fill="#111" stroke="#D4AF37" stroke-width="1.5"/><circle cx="210" cy="60" r="3.5" fill="#111" stroke="#D4AF37" stroke-width="1.5"/><circle cx="300" cy="75" r="3.5" fill="#111" stroke="#D4AF37" stroke-width="1.5"/><circle cx="390" cy="90" r="3.5" fill="#111" stroke="#D4AF37" stroke-width="1.5"/><circle cx="480" cy="50" r="3.5" fill="#111" stroke="#D4AF37" stroke-width="1.5"/><circle cx="570" cy="35" r="4" fill="#F4D03F" stroke="#D4AF37" stroke-width="1.5"/>
+              <text x="30" y="150" fill="#666" font-size="9" text-anchor="middle">Lun</text><text x="120" y="150" fill="#666" font-size="9" text-anchor="middle">Mar</text><text x="210" y="150" fill="#666" font-size="9" text-anchor="middle">Mié</text><text x="300" y="150" fill="#666" font-size="9" text-anchor="middle">Jue</text><text x="390" y="150" fill="#666" font-size="9" text-anchor="middle">Vie</text><text x="480" y="150" fill="#666" font-size="9" text-anchor="middle">Sáb</text><text x="570" y="150" fill="#D4AF37" font-size="9" text-anchor="middle" font-weight="600">Hoy</text>
+            </svg>
+          </div>
+        </div>
+        <!-- Kitchen + Cash -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <div class="lg:col-span-3 bg-cardBg border border-primary/15 rounded-xl p-5">
+            <h3 class="text-[10px] tracking-[0.18em] text-primary uppercase font-semibold mb-4 flex items-center gap-2"><i data-lucide="chef-hat" class="w-4 h-4"></i> Cocina — Hoy</h3>
+            <div class="space-y-2">
+              <div class="bg-darkBg border border-primary/10 p-3 rounded-lg flex items-center justify-between"><div><span class="text-white text-xs font-semibold">ORD-007</span><span class="text-[9px] bg-primary/10 border border-primary/20 text-primary px-1.5 py-0.5 rounded ml-2">Mesa: 2</span><p class="text-[11px] text-gray-400 mt-1">2x Tacos de Pulpo, 1x Michelada</p></div><div class="text-right"><span class="text-[9px] bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2 py-0.5 rounded-full">En Preparación</span></div></div>
+              <div class="bg-darkBg border border-primary/10 p-3 rounded-lg flex items-center justify-between"><div><span class="text-white text-xs font-semibold">ORD-008</span><span class="text-[9px] bg-primary/10 border border-primary/20 text-primary px-1.5 py-0.5 rounded ml-2">Mesa: 5</span><p class="text-[11px] text-gray-400 mt-1">1x Filete al Mojo de Ajo, 1x Arroz a la Tumbada</p></div><div class="text-right"><span class="text-[9px] bg-yellow-500/10 text-yellow-400 border border-yellow-500/20 px-2 py-0.5 rounded-full">Pendiente</span></div></div>
+              <div class="bg-darkBg border border-primary/10 p-3 rounded-lg flex items-center justify-between"><div><span class="text-white text-xs font-semibold">ORD-009</span><span class="text-[9px] bg-primary/10 border border-primary/20 text-primary px-1.5 py-0.5 rounded ml-2">Domicilio</span><p class="text-[11px] text-gray-400 mt-1">1x Coctel de Camarón, 2x Agua de Horchata</p></div><div class="text-right"><span class="text-[9px] bg-green-500/10 text-green-400 border border-green-500/20 px-2 py-0.5 rounded-full">Listo</span></div></div>
+            </div>
+          </div>
+          <div class="lg:col-span-2 bg-cardBg border border-primary/15 rounded-xl p-5">
+            <h3 class="text-[10px] tracking-[0.18em] text-primary uppercase font-semibold mb-4 flex items-center gap-2"><i data-lucide="wallet" class="w-4 h-4"></i> Corte de Turno</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center p-2.5 bg-darkBg rounded-lg"><span class="text-xs text-gray-400">Efectivo</span><span class="text-sm font-semibold text-green-400">$6,840</span></div>
+              <div class="flex justify-between items-center p-2.5 bg-darkBg rounded-lg"><span class="text-xs text-gray-400">Tarjeta</span><span class="text-sm font-semibold text-blue-400">$3,210</span></div>
+              <div class="flex justify-between items-center p-2.5 bg-darkBg rounded-lg"><span class="text-xs text-gray-400">Plataformas</span><span class="text-sm font-semibold text-purple-400">$2,400</span></div>
+              <div class="border-t border-primary/10 pt-3 mt-3"><div class="flex justify-between"><span class="text-xs text-gray-500">Saldo en Caja</span><span class="text-sm font-bold text-primary">$4,280</span></div></div>
+            </div>
+            <button onclick="navegar('corte-caja')" class="w-full mt-4 text-[10px] text-primary border border-primary/20 rounded-lg py-2 hover:bg-primary/10 transition cursor-pointer">Ver Corte Completo →</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== MENU DEL CLIENTE ========== -->
+      <div id="screen-menu" class="screen">
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-xl font-bold text-white tracking-wide">Menú del Restaurante</h1>
+          <div class="flex items-center gap-3">
+            <div class="relative"><i data-lucide="search" class="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2"></i><input placeholder="Buscar platillo..." class="bg-cardBg border border-primary/15 rounded-lg pl-9 pr-4 py-2 text-xs text-white focus:outline-none focus:border-primary/40 w-56"></div>
+            <button onclick="navegar('carrito')" class="relative bg-primary text-black px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 cursor-pointer"><i data-lucide="shopping-cart" class="w-4 h-4"></i> Carrito <span class="bg-black/20 px-1.5 py-0.5 rounded-full text-[10px]">3</span></button>
+          </div>
+        </div>
+        <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+          <button class="px-4 py-2 bg-primary text-black text-xs font-semibold rounded-lg whitespace-nowrap">Todos</button>
+          <button class="px-4 py-2 bg-cardBg border border-primary/15 text-gray-400 text-xs rounded-lg whitespace-nowrap hover:border-primary/40 transition">⭐ Recomendados</button>
+          <button class="px-4 py-2 bg-cardBg border border-primary/15 text-gray-400 text-xs rounded-lg whitespace-nowrap hover:border-primary/40 transition">Entradas</button>
+          <button class="px-4 py-2 bg-cardBg border border-primary/15 text-gray-400 text-xs rounded-lg whitespace-nowrap hover:border-primary/40 transition">Platos Fuertes</button>
+          <button class="px-4 py-2 bg-cardBg border border-primary/15 text-gray-400 text-xs rounded-lg whitespace-nowrap hover:border-primary/40 transition">Bebidas</button>
+          <button class="px-4 py-2 bg-cardBg border border-primary/15 text-gray-400 text-xs rounded-lg whitespace-nowrap hover:border-primary/40 transition">Postres</button>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div class="dish-card bg-cardBg border border-primary/15 rounded-xl overflow-hidden hover:border-primary/40 transition group">
+            <div class="h-40 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden"><i data-lucide="utensils-crossed" class="w-16 h-16 text-primary/40 dish-img transition-transform"></i></div>
+            <div class="p-4"><div class="flex items-start justify-between mb-1"><span class="text-sm font-semibold text-white">Tacos de Pulpo</span><span class="text-primary font-bold text-sm">$189</span></div><p class="text-[10px] text-gray-500 mb-3">Pulpo a la parrilla, guacamole, tortilla de maíz</p><button class="w-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-semibold py-2 rounded-lg hover:bg-primary hover:text-black transition">Agregar al Carrito</button></div>
+          </div>
+          <div class="dish-card bg-cardBg border border-primary/15 rounded-xl overflow-hidden hover:border-primary/40 transition">
+            <div class="h-40 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden"><i data-lucide="utensils-crossed" class="w-16 h-16 text-primary/40 transition-transform"></i></div>
+            <div class="p-4"><div class="flex items-start justify-between mb-1"><div class="flex items-center gap-1.5"><span class="text-sm font-semibold text-white">Filete al Mojo de Ajo</span><span class="text-[8px] bg-primary text-black px-1 py-0.5 rounded font-bold">Chef</span></div><span class="text-primary font-bold text-sm">$245</span></div><p class="text-[10px] text-gray-500 mb-3">Filete de pescado fresco, ajo, limón, arroz</p><button class="w-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-semibold py-2 rounded-lg hover:bg-primary hover:text-black transition">Agregar al Carrito</button></div>
+          </div>
+          <div class="dish-card bg-cardBg border border-primary/15 rounded-xl overflow-hidden hover:border-primary/40 transition">
+            <div class="h-40 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden"><i data-lucide="utensils-crossed" class="w-16 h-16 text-primary/40 transition-transform"></i></div>
+            <div class="p-4"><div class="flex items-start justify-between mb-1"><span class="text-sm font-semibold text-white">Coctel de Camarón</span><span class="text-primary font-bold text-sm">$195</span></div><p class="text-[10px] text-gray-500 mb-3">Camarón fresco, aguacate, salsa rosada, galletas</p><button class="w-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-semibold py-2 rounded-lg hover:bg-primary hover:text-black transition">Agregar al Carrito</button></div>
+          </div>
+          <div class="dish-card bg-cardBg border border-primary/15 rounded-xl overflow-hidden hover:border-primary/40 transition">
+            <div class="h-40 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden"><i data-lucide="utensils-crossed" class="w-16 h-16 text-primary/40 transition-transform"></i></div>
+            <div class="p-4"><div class="flex items-start justify-between mb-1"><span class="text-sm font-semibold text-white">Arroz a la Tumbada</span><span class="text-primary font-bold text-sm">$210</span></div><p class="text-[10px] text-gray-500 mb-3">Arroz rojo con mariscos variados, enchilado</p><button class="w-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-semibold py-2 rounded-lg hover:bg-primary hover:text-black transition">Agregar al Carrito</button></div>
+          </div>
+          <div class="dish-card bg-cardBg border border-primary/15 rounded-xl overflow-hidden hover:border-primary/40 transition">
+            <div class="h-40 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden"><i data-lucide="glass-water" class="w-16 h-16 text-primary/40 transition-transform"></i></div>
+            <div class="p-4"><div class="flex items-start justify-between mb-1"><span class="text-sm font-semibold text-white">Michelada Preparada</span><span class="text-primary font-bold text-sm">$85</span></div><p class="text-[10px] text-gray-500 mb-3">Clamato, limón, salsa inglesa, chile, chamoy</p><button class="w-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-semibold py-2 rounded-lg hover:bg-primary hover:text-black transition">Agregar al Carrito</button></div>
+          </div>
+          <div class="dish-card bg-cardBg border border-primary/15 rounded-xl overflow-hidden hover:border-primary/40 transition">
+            <div class="h-40 bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center overflow-hidden"><i data-lucide="ice-cream-cone" class="w-16 h-16 text-primary/40 transition-transform"></i></div>
+            <div class="p-4"><div class="flex items-start justify-between mb-1"><span class="text-sm font-semibold text-white">Flan Napolitano</span><span class="text-primary font-bold text-sm">$65</span></div><p class="text-[10px] text-gray-500 mb-3">Flan casero con caramelo y crema</p><button class="w-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-semibold py-2 rounded-lg hover:bg-primary hover:text-black transition">Agregar al Carrito</button></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== CARRITO ========== -->
+      <div id="screen-carrito" class="screen">
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-xl font-bold text-white tracking-wide">Carrito de Compras</h1>
+          <button onclick="navegar('menu')" class="text-xs text-primary border border-primary/20 px-3 py-1.5 rounded-lg hover:bg-primary/10 transition cursor-pointer">← Volver al Menú</button>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2 space-y-3">
+            <div class="bg-cardBg border border-primary/15 rounded-xl p-4 flex items-center gap-4">
+              <div class="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0"><i data-lucide="utensils-crossed" class="w-7 h-7 text-primary/50"></i></div>
+              <div class="flex-1"><p class="text-sm font-semibold text-white">Tacos de Pulpo</p><p class="text-[10px] text-gray-500">Entradas</p></div>
+              <div class="flex items-center gap-2"><button class="w-7 h-7 bg-darkBg border border-primary/20 rounded-lg flex items-center justify-center text-primary text-xs hover:bg-primary/10">-</button><span class="text-sm font-semibold w-6 text-center">2</span><button class="w-7 h-7 bg-darkBg border border-primary/20 rounded-lg flex items-center justify-center text-primary text-xs hover:bg-primary/10">+</button></div>
+              <span class="text-sm font-semibold text-white w-20 text-right">$378</span>
+              <button class="text-gray-600 hover:text-red-400 transition ml-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </div>
+            <div class="bg-cardBg border border-primary/15 rounded-xl p-4 flex items-center gap-4">
+              <div class="w-16 h-16 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0"><i data-lucide="utensils-crossed" class="w-7 h-7 text-primary/50"></i></div>
+              <div class="flex-1"><p class="text-sm font-semibold text-white">Filete al Mojo de Ajo</p><p class="text-[10px] text-gray-500">Platos Fuertes</p></div>
+              <div class="flex items-center gap-2"><button class="w-7 h-7 bg-darkBg border border-primary/20 rounded-lg flex items-center justify-center text-primary text-xs hover:bg-primary/10">-</button><span class="text-sm font-semibold w-6 text-center">1</span><button class="w-7 h-7 bg-darkBg border border-primary/20 rounded-lg flex items-center justify-center text-primary text-xs hover:bg-primary/10">+</button></div>
+              <span class="text-sm font-semibold text-white w-20 text-right">$245</span>
+              <button class="text-gray-600 hover:text-red-400 transition ml-2"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+            </div>
+          </div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-5 h-fit">
+            <h3 class="text-[10px] tracking-[0.18em] text-primary uppercase font-semibold mb-4">Resumen del Pedido</h3>
+            <div class="space-y-2 mb-4">
+              <div class="flex justify-between text-xs"><span class="text-gray-400">Tipo de Pedido</span><span class="text-white">Mesa (Local)</span></div>
+              <div class="flex justify-between text-xs"><span class="text-gray-400">Mesa</span><span class="text-white">Mesa 1</span></div>
+              <div class="flex justify-between text-xs"><span class="text-gray-400">Subtotal</span><span class="text-white">$623.00</span></div>
+              <div class="flex justify-between text-xs"><span class="text-gray-400">IVA (16%)</span><span class="text-white">$99.68</span></div>
+              <div class="border-t border-primary/10 pt-2 flex justify-between"><span class="text-sm font-semibold text-white">Total</span><span class="text-lg font-bold text-primary">$722.68</span></div>
+            </div>
+            <button onclick="navegar('carrito-exito')" class="w-full bg-primary hover:bg-primary-dark text-black py-3 rounded-lg text-xs font-semibold tracking-wider transition cursor-pointer">PROCEDER AL PAGO</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== CARRITO ÉXITO ========== -->
+      <div id="screen-carrito-exito" class="screen">
+        <div class="max-w-md mx-auto text-center py-8">
+          <div class="w-16 h-16 bg-green-500/10 border border-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4"><i data-lucide="check-circle" class="w-8 h-8 text-green-500"></i></div>
+          <h2 class="text-lg font-bold text-white mb-1">¡Pedido Confirmado!</h2>
+          <p class="text-xs text-gray-500 mb-6">Esperando Ticket de Compra</p>
+          <div class="bg-cardBg border border-primary/20 rounded-xl p-6 text-left font-mono text-[11px] space-y-1.5">
+            <p class="text-center text-primary font-bold text-sm mb-3">--- EL PULPAZO ---</p>
+            <p class="text-gray-400">Ticket: #TKT-0042</p>
+            <p class="text-gray-400">Tipo: Mesa (Mesa 1)</p>
+            <p class="text-gray-400">Fecha: 24/07/2026 — 14:32</p>
+            <div class="border-t border-primary/10 my-2"></div>
+            <p class="text-white">2x Tacos de Pulpo — $378.00</p>
+            <p class="text-white">1x Filete al Mojo de Ajo — $245.00</p>
+            <div class="border-t border-primary/10 my-2"></div>
+            <p class="text-gray-400">Subtotal: $623.00</p>
+            <p class="text-gray-400">IVA: $99.68</p>
+            <p class="text-primary font-bold text-sm">TOTAL: $722.68</p>
+            <p class="text-green-400 font-semibold mt-2">✓ PAGADO — Efectivo</p>
+            <p class="text-gray-400">Pago: $800.00 | Cambio: $77.32</p>
+            <p class="text-center text-gray-600 mt-3 text-[10px]">¡Gracias por su preferencia!</p>
+          </div>
+          <div class="flex gap-3 mt-6">
+            <button onclick="navegar('menu')" class="flex-1 bg-primary/10 border border-primary/20 text-primary py-3 rounded-lg text-xs font-semibold hover:bg-primary/20 transition cursor-pointer">Entregar Ticket y Regresar</button>
+            <button onclick="navegar('dividir')" class="flex-1 bg-cardBg border border-primary/15 text-gray-400 py-3 rounded-lg text-xs font-semibold hover:border-primary/40 transition cursor-pointer">Dividir Cuenta</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== COCINA ========== -->
+      <div id="screen-cocina" class="screen">
+        <div class="flex items-center justify-between mb-6">
+          <div class="flex items-center gap-3"><h1 class="text-xl font-bold text-white tracking-wide flex items-center gap-2"><i data-lucide="chef-hat" class="w-5 h-5 text-primary"></i> Cocina</h1><span class="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full border border-primary/20">5 pedidos</span></div>
+          <select class="bg-cardBg border border-primary/15 text-xs text-gray-400 rounded-lg px-3 py-2 focus:outline-none"><option>Todos</option><option>Local</option><option>Llevar</option><option>Domicilio</option></select>
+        </div>
+        <div class="grid grid-cols-3 gap-4">
+          <div class="kanban-col"><h3 class="text-[10px] tracking-[0.18em] text-yellow-400 uppercase font-semibold mb-3 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-yellow-400"></span> Pendientes (2)</h3><div class="space-y-3">
+            <div class="bg-cardBg border border-yellow-500/20 rounded-xl p-4"><div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-white">ORD-008</span><span class="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">Mesa 5</span></div><p class="text-[11px] text-gray-400 mb-1">1x Filete al Mojo de Ajo</p><p class="text-[11px] text-gray-400 mb-3">1x Arroz a la Tumbada</p><button class="w-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-[10px] font-semibold py-2 rounded-lg hover:bg-yellow-500/20 transition">Enviar a Cocina →</button></div>
+            <div class="bg-cardBg border border-yellow-500/20 rounded-xl p-4"><div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-white">ORD-010</span><span class="text-[9px] bg-purple-500/10 text-purple-400 px-1.5 py-0.5 rounded">Uber Eats</span></div><p class="text-[11px] text-gray-400 mb-3">1x Ceviche Mixto, 2x Agua de Jamaica</p><button class="w-full bg-yellow-500/10 border border-yellow-500/30 text-yellow-400 text-[10px] font-semibold py-2 rounded-lg hover:bg-yellow-500/20 transition">Enviar a Cocina →</button></div>
+          </div></div>
+          <div class="kanban-col"><h3 class="text-[10px] tracking-[0.18em] text-blue-400 uppercase font-semibold mb-3 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-blue-400"></span> En Preparación (2)</h3><div class="space-y-3">
+            <div class="bg-cardBg border border-blue-500/20 rounded-xl p-4"><div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-white">ORD-007</span><span class="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">Mesa 2</span></div><p class="text-[11px] text-gray-400 mb-1">2x Tacos de Pulpo</p><p class="text-[11px] text-gray-400 mb-3">1x Michelada</p><p class="text-[9px] text-amber-400 mb-3">⏱ 12 min</p><button class="w-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-semibold py-2 rounded-lg hover:bg-blue-500/20 transition">Marcar Listo ✓</button></div>
+            <div class="bg-cardBg border border-blue-500/20 rounded-xl p-4"><div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-white">ORD-011</span><span class="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded">Mesa 8</span></div><p class="text-[11px] text-gray-400 mb-3">3x Camarones a la Diabla</p><p class="text-[9px] text-green-400 mb-3">⏱ 5 min</p><button class="w-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[10px] font-semibold py-2 rounded-lg hover:bg-blue-500/20 transition">Marcar Listo ✓</button></div>
+          </div></div>
+          <div class="kanban-col"><h3 class="text-[10px] tracking-[0.18em] text-green-400 uppercase font-semibold mb-3 flex items-center gap-2"><span class="w-2 h-2 rounded-full bg-green-400"></span> Listos (1)</h3><div class="space-y-3">
+            <div class="bg-cardBg border border-green-500/20 rounded-xl p-4"><div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-white">ORD-009</span><span class="text-[9px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded">Domicilio</span></div><p class="text-[11px] text-gray-400 mb-1">1x Coctel de Camarón</p><p class="text-[11px] text-gray-400 mb-3">2x Agua de Horchata</p><button class="w-full bg-green-500/10 border border-green-500/30 text-green-400 text-[10px] font-semibold py-2 rounded-lg hover:bg-green-500/20 transition">Entregado ✓</button></div>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- ========== CORTE DE CAJA ========== -->
+      <div id="screen-corte-caja" class="screen">
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-xl font-bold text-white tracking-wide">Corte de Caja</h1>
+          <div class="flex gap-2"><button class="text-[10px] px-3 py-1.5 bg-amber-500/10 border border-amber-500/20 text-amber-400 rounded-lg hover:bg-amber-500/20 transition">Medio Corte</button><button class="text-[10px] px-3 py-1.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg hover:bg-red-500/20 transition">Corte Final</button></div>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Ventas Totales</span><p class="text-xl font-light mt-2">$12,450</p></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Efectivo en Caja</span><p class="text-xl font-light mt-2 text-green-400">$4,280</p></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Gastos del Día</span><p class="text-xl font-light mt-2 text-red-400">$1,350</p></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider font-semibold">Abonos Recibidos</span><p class="text-xl font-light mt-2 text-blue-400">$680</p></div>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-5">
+            <h3 class="text-[10px] tracking-[0.18em] text-primary uppercase font-semibold mb-4">Ventas por Método de Pago</h3>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between"><div class="flex items-center gap-2"><i data-lucide="banknote" class="w-4 h-4 text-green-400"></i><span class="text-xs text-gray-400">Efectivo</span></div><span class="text-sm font-semibold text-green-400">$6,840</span></div>
+              <div class="flex items-center justify-between"><div class="flex items-center gap-2"><i data-lucide="credit-card" class="w-4 h-4 text-blue-400"></i><span class="text-xs text-gray-400">Tarjeta</span></div><span class="text-sm font-semibold text-blue-400">$3,210</span></div>
+              <div class="flex items-center justify-between"><div class="flex items-center gap-2"><i data-lucide="smartphone" class="w-4 h-4 text-purple-400"></i><span class="text-xs text-gray-400">Plataformas</span></div><span class="text-sm font-semibold text-purple-400">$2,400</span></div>
+            </div>
+          </div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-5">
+            <h3 class="text-[10px] tracking-[0.18em] text-primary uppercase font-semibold mb-4">Cálculo de Efectivo</h3>
+            <div class="space-y-2 text-xs">
+              <div class="flex justify-between"><span class="text-gray-400">Saldo Inicial</span><span class="text-white">$2,000.00</span></div>
+              <div class="flex justify-between"><span class="text-gray-400">+ Ventas en Efectivo</span><span class="text-green-400">$6,840.00</span></div>
+              <div class="flex justify-between"><span class="text-gray-400">+ Abonos en Efectivo</span><span class="text-green-400">$680.00</span></div>
+              <div class="flex justify-between"><span class="text-gray-400">- Gastos en Efectivo</span><span class="text-red-400">-$950.00</span></div>
+              <div class="border-t border-primary/10 pt-2 flex justify-between font-semibold"><span class="text-white">Efectivo Esperado</span><span class="text-primary">$8,570.00</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== INVENTARIO ========== -->
+      <div id="screen-inventario" class="screen">
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-xl font-bold text-white tracking-wide">Control de Inventario</h1>
+          <div class="flex gap-2"><button class="text-[10px] px-3 py-1.5 bg-primary text-black rounded-lg font-semibold hover:bg-primary-dark transition">+ Nuevo Insumo</button><button class="text-[10px] px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary rounded-lg hover:bg-primary/20 transition">+ Nueva Receta</button></div>
+        </div>
+        <div class="flex gap-2 mb-6">
+          <button class="px-4 py-2 bg-primary text-black text-xs font-semibold rounded-lg">Insumos</button>
+          <button class="px-4 py-2 bg-cardBg border border-primary/15 text-gray-400 text-xs rounded-lg">Recetas (Platillos)</button>
+        </div>
+        <div class="bg-cardBg border border-primary/15 rounded-xl overflow-hidden">
+          <table class="w-full text-left">
+            <thead><tr class="border-b border-primary/10 text-gray-500 text-[10px] uppercase tracking-wider"><th class="p-4">Insumo</th><th class="p-4">Stock Actual</th><th class="p-4">Mínimo</th><th class="p-4 text-center">Estado</th><th class="p-4 text-center">Acciones</th></tr></thead>
+            <tbody class="divide-y divide-primary/10">
+              <tr class="text-sm"><td class="p-4 font-medium text-white">Pulpo Fresco</td><td class="p-4"><div class="flex items-baseline gap-1 mb-1"><span class="font-semibold">15</span><span class="text-gray-500 text-[10px]">kg</span></div><div class="w-24 h-1 bg-[#1a1a1a] rounded-full overflow-hidden"><div class="h-full bg-green-500 rounded-full" style="width:75%"></div></div></td><td class="p-4 text-gray-400 text-xs">5 kg</td><td class="p-4 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-500/10 text-green-500 border border-green-500/20">Saludable</span></td><td class="p-4 text-center"><div class="flex gap-1 justify-center"><button class="w-7 h-7 bg-darkBg border border-primary/15 rounded flex items-center justify-center text-green-400 hover:bg-green-500/10 text-xs">+</button><button class="w-7 h-7 bg-darkBg border border-primary/15 rounded flex items-center justify-center text-red-400 hover:bg-red-500/10 text-xs">-</button><button class="w-7 h-7 bg-darkBg border border-primary/15 rounded flex items-center justify-center text-gray-400 hover:bg-primary/10 text-xs"><i data-lucide="pencil" class="w-3 h-3"></i></button></div></td></tr>
+              <tr class="text-sm"><td class="p-4 font-medium text-white">Sal de Grano</td><td class="p-4"><div class="flex items-baseline gap-1 mb-1"><span class="font-semibold">1.2</span><span class="text-gray-500 text-[10px]">kg</span></div><div class="w-24 h-1 bg-[#1a1a1a] rounded-full overflow-hidden"><div class="h-full bg-yellow-500 rounded-full" style="width:30%"></div></div></td><td class="p-4 text-gray-400 text-xs">2 kg</td><td class="p-4 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-yellow-500/10 text-yellow-500 border border-yellow-500/20">Bajo Stock</span></td><td class="p-4 text-center"><div class="flex gap-1 justify-center"><button class="w-7 h-7 bg-darkBg border border-primary/15 rounded flex items-center justify-center text-green-400 hover:bg-green-500/10 text-xs">+</button><button class="w-7 h-7 bg-darkBg border border-primary/15 rounded flex items-center justify-center text-red-400 hover:bg-red-500/10 text-xs">-</button><button class="w-7 h-7 bg-darkBg border border-primary/15 rounded flex items-center justify-center text-gray-400 hover:bg-primary/10 text-xs"><i data-lucide="pencil" class="w-3 h-3"></i></button></div></td></tr>
+              <tr class="text-sm"><td class="p-4 font-medium text-white">Camarón Curado</td><td class="p-4"><div class="flex items-baseline gap-1 mb-1"><span class="font-semibold">8</span><span class="text-gray-500 text-[10px]">kg</span></div><div class="w-24 h-1 bg-[#1a1a1a] rounded-full overflow-hidden"><div class="h-full bg-green-500 rounded-full" style="width:60%"></div></div></td><td class="p-4 text-gray-400 text-xs">3 kg</td><td class="p-4 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-green-500/10 text-green-500 border border-green-500/20">Saludable</span></td><td class="p-4 text-center"><div class="flex gap-1 justify-center"><button class="w-7 h-7 bg-darkBg border border-primary/15 rounded flex items-center justify-center text-green-400 hover:bg-green-500/10 text-xs">+</button><button class="w-7 h-7 bg-darkBg border border-primary/15 rounded flex items-center justify-center text-red-400 hover:bg-red-500/10 text-xs">-</button><button class="w-7 h-7 bg-darkBg border border-primary/15 rounded flex items-center justify-center text-gray-400 hover:bg-primary/10 text-xs"><i data-lucide="pencil" class="w-3 h-3"></i></button></div></td></tr>
+              <tr class="text-sm"><td class="p-4 font-medium text-white">Limones</td><td class="p-4"><div class="flex items-baseline gap-1 mb-1"><span class="font-semibold">0.5</span><span class="text-gray-500 text-[10px]">kg</span></div><div class="w-24 h-1 bg-[#1a1a1a] rounded-full overflow-hidden"><div class="h-full bg-red-500 rounded-full" style="width:12%"></div></div></td><td class="p-4 text-gray-400 text-xs">2 kg</td><td class="p-4 text-center"><span class="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-red-500/10 text-red-500 border border-red-500/20">Crítico</span></td><td class="p-4 text-center"><div class="flex gap-1 justify-center"><button class="w-7 h-7 bg-darkBg border border-primary/15 rounded flex items-center justify-center text-green-400 hover:bg-green-500/10 text-xs">+</button><button class="w-7 h-7 bg-darkBg border border-primary/15 rounded flex items-center justify-center text-red-400 hover:bg-red-500/10 text-xs">-</button><button class="w-7 h-7 bg-darkBg border border-primary/15 rounded flex items-center justify-center text-gray-400 hover:bg-primary/10 text-xs"><i data-lucide="pencil" class="w-3 h-3"></i></button></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ========== CLIENTES ========== -->
+      <div id="screen-clientes" class="screen">
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-xl font-bold text-white tracking-wide flex items-center gap-2">Clientes <span class="text-xs text-gray-500 font-normal">(45 registrados)</span></h1>
+          <button class="text-[10px] px-3 py-1.5 bg-primary text-black rounded-lg font-semibold hover:bg-primary-dark transition">+ Nuevo Cliente</button>
+        </div>
+        <div class="relative mb-4"><i data-lucide="search" class="w-4 h-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2"></i><input placeholder="Buscar por nombre, teléfono, colonia..." class="w-full bg-cardBg border border-primary/15 rounded-lg pl-9 pr-4 py-2.5 text-xs text-white focus:outline-none focus:border-primary/40"></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center text-primary text-xs font-bold">MR</div><div><p class="text-sm font-semibold text-white">María Rodríguez</p><p class="text-[10px] text-gray-500">555-0123</p></div></div><div class="text-[10px] text-gray-500 space-y-1"><p>Calle Morelos 142, Col. Centro</p><p>Fracc. Las Flores, CP 76000</p></div><div class="flex gap-2 mt-3"><button class="text-[10px] text-primary border border-primary/20 px-2 py-1 rounded hover:bg-primary/10 transition"><i data-lucide="pencil" class="w-3 h-3 inline"></i> Editar</button><button class="text-[10px] text-red-400 border border-red-500/20 px-2 py-1 rounded hover:bg-red-500/10 transition"><i data-lucide="trash-2" class="w-3 h-3 inline"></i></button></div></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 rounded-full bg-blue-500/20 border border-blue-500/30 flex items-center justify-center text-blue-400 text-xs font-bold">CL</div><div><p class="text-sm font-semibold text-white">Carlos López</p><p class="text-[10px] text-gray-500">555-0456</p></div></div><div class="text-[10px] text-gray-500 space-y-1"><p>Av. Juárez 89, Col. Reforma</p><p>Fracc. Jardines, CP 76010</p></div><div class="flex gap-2 mt-3"><button class="text-[10px] text-primary border border-primary/20 px-2 py-1 rounded hover:bg-primary/10 transition"><i data-lucide="pencil" class="w-3 h-3 inline"></i> Editar</button><button class="text-[10px] text-red-400 border border-red-500/20 px-2 py-1 rounded hover:bg-red-500/10 transition"><i data-lucide="trash-2" class="w-3 h-3 inline"></i></button></div></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center text-green-400 text-xs font-bold">AG</div><div><p class="text-sm font-semibold text-white">Ana García</p><p class="text-[10px] text-gray-500">555-0789</p></div></div><div class="text-[10px] text-gray-500 space-y-1"><p>Calle Hidalgo 256, Col. Norte</p><p>Fracc. El Pedregal, CP 76020</p></div><div class="flex gap-2 mt-3"><button class="text-[10px] text-primary border border-primary/20 px-2 py-1 rounded hover:bg-primary/10 transition"><i data-lucide="pencil" class="w-3 h-3 inline"></i> Editar</button><button class="text-[10px] text-red-400 border border-red-500/20 px-2 py-1 rounded hover:bg-red-500/10 transition"><i data-lucide="trash-2" class="w-3 h-3 inline"></i></button></div></div>
+        </div>
+      </div>
+
+      <!-- ========== PROMOTORES ========== -->
+      <div id="screen-promotores" class="screen">
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-xl font-bold text-white tracking-wide">Promotores y Entregas</h1>
+          <button class="text-[10px] px-3 py-1.5 bg-primary text-black rounded-lg font-semibold hover:bg-primary-dark transition">+ Nuevo Promotor</button>
+        </div>
+        <div class="flex gap-4 mb-6">
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4 flex-1"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Promotores Activos</span><p class="text-2xl font-light mt-1">6</p></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4 flex-1"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Entregas Hoy</span><p class="text-2xl font-light mt-1">12</p></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4 flex-1"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Pendientes</span><p class="text-2xl font-light mt-1 text-amber-400">3</p></div>
+        </div>
+        <div class="flex gap-2 mb-4"><button class="px-4 py-2 bg-primary text-black text-xs font-semibold rounded-lg">Promotores</button><button class="px-4 py-2 bg-cardBg border border-primary/15 text-gray-400 text-xs rounded-lg">Entregas</button><button class="px-4 py-2 bg-cardBg border border-primary/15 text-gray-400 text-xs rounded-lg">Calendario</button></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-white">Roberto Méndez</span><span class="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded border border-primary/20">Coca-Cola</span></div><p class="text-[10px] text-gray-500 mb-1">Contacto: María López</p><p class="text-[10px] text-gray-500 mb-3">Tel: 555-1234</p><div class="flex gap-2"><button class="text-[10px] text-primary border border-primary/20 px-2 py-1 rounded hover:bg-primary/10 transition">Editar</button><span class="text-[9px] bg-green-500/10 text-green-400 px-2 py-1 rounded border border-green-500/20">Activo</span></div></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><div class="flex items-center justify-between mb-2"><span class="text-xs font-bold text-white">Laura Sánchez</span><span class="text-[9px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded border border-blue-500/20">Pepsi</span></div><p class="text-[10px] text-gray-500 mb-1">Contacto: Fernando Ruiz</p><p class="text-[10px] text-gray-500 mb-3">Tel: 555-5678</p><div class="flex gap-2"><button class="text-[10px] text-primary border border-primary/20 px-2 py-1 rounded hover:bg-primary/10 transition">Editar</button><span class="text-[9px] bg-green-500/10 text-green-400 px-2 py-1 rounded border border-green-500/20">Activo</span></div></div>
+        </div>
+      </div>
+
+      <!-- ========== REPARTIDORES ========== -->
+      <div id="screen-repartidores" class="screen">
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-xl font-bold text-white tracking-wide">Repartidores</h1>
+          <button class="text-[10px] px-3 py-1.5 bg-primary text-black rounded-lg font-semibold hover:bg-primary-dark transition">+ Nuevo Repartidor</button>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Disponibles</span><p class="text-2xl font-light mt-1 text-green-400">3</p></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider">En Entrega</span><p class="text-2xl font-light mt-1 text-amber-400">2</p></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Descanso</span><p class="text-2xl font-light mt-1 text-gray-400">1</p></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Inactivos</span><p class="text-2xl font-light mt-1 text-red-400">1</p></div>
+        </div>
+        <div class="flex gap-2 mb-4"><button class="px-4 py-2 bg-primary text-black text-xs font-semibold rounded-lg">Repartidores</button><button class="px-4 py-2 bg-cardBg border border-primary/15 text-gray-400 text-xs rounded-lg">Entregas Activas</button><button class="px-4 py-2 bg-cardBg border border-primary/15 text-gray-400 text-xs rounded-lg">Historial Hoy</button></div>
+        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 rounded-full bg-green-500/20 border border-green-500/30 flex items-center justify-center"><i data-lucide="bike" class="w-5 h-5 text-green-400"></i></div><div><p class="text-sm font-semibold text-white">Diego Fernández</p><p class="text-[10px] text-gray-500">Moto — 555-9012</p></div></div><span class="text-[9px] bg-green-500/10 text-green-400 px-2 py-1 rounded border border-green-500/20">Disponible</span><div class="flex gap-2 mt-3"><button class="text-[10px] text-primary border border-primary/20 px-2 py-1 rounded hover:bg-primary/10 transition">Editar</button></div></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><div class="flex items-center gap-3 mb-3"><div class="w-10 h-10 rounded-full bg-amber-500/20 border border-amber-500/30 flex items-center justify-center"><i data-lucide="bike" class="w-5 h-5 text-amber-400"></i></div><div><p class="text-sm font-semibold text-white">Andrés Morales</p><p class="text-[10px] text-gray-500">Bicicleta — 555-3456</p></div></div><span class="text-[9px] bg-amber-500/10 text-amber-400 px-2 py-1 rounded border border-amber-500/20">En Entrega</span><div class="flex gap-2 mt-3"><button class="text-[10px] text-primary border border-primary/20 px-2 py-1 rounded hover:bg-primary/10 transition">Editar</button></div></div>
+        </div>
+      </div>
+
+      <!-- ========== REPORTES ========== -->
+      <div id="screen-reportes" class="screen">
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-xl font-bold text-white tracking-wide">Reportes de Ventas</h1>
+          <div class="flex gap-2"><select class="bg-cardBg border border-primary/15 text-[10px] text-gray-400 rounded-lg px-3 py-2 focus:outline-none"><option>Hoy</option><option>Últimos 7 Días</option><option>Últimos 30 Días</option><option>TODO</option></select><button class="text-[10px] px-3 py-1.5 bg-primary/10 border border-primary/20 text-primary rounded-lg hover:bg-primary/20 transition">Exportar CSV</button></div>
+        </div>
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Ventas Totales</span><p class="text-xl font-light mt-1">$12,450</p></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider">IVA Cobrado</span><p class="text-xl font-light mt-1">$1,992</p></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Ticket Promedio</span><p class="text-xl font-light mt-1">$385</p></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Utilidad Neta</span><p class="text-xl font-light mt-1 text-green-400">68.4%</p></div>
+        </div>
+        <div class="flex gap-2 mb-4"><button class="px-4 py-2 bg-primary text-black text-xs font-semibold rounded-lg">Resumen</button><button class="px-4 py-2 bg-cardBg border border-primary/15 text-gray-400 text-xs rounded-lg">Gráfica</button><button class="px-4 py-2 bg-cardBg border border-primary/15 text-gray-400 text-xs rounded-lg">Top Platillos</button></div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-5"><h3 class="text-[10px] tracking-[0.18em] text-primary uppercase font-semibold mb-4">Ventas por Tipo de Pedido</h3><div class="space-y-3">
+            <div class="flex items-center gap-3"><span class="text-xs text-gray-400 w-16">Local</span><div class="flex-1 h-2 bg-[#1a1a1a] rounded-full overflow-hidden"><div class="h-full bg-primary rounded-full" style="width:55%"></div></div><span class="text-xs text-white w-16 text-right">$6,845</span></div>
+            <div class="flex items-center gap-3"><span class="text-xs text-gray-400 w-16">Llevar</span><div class="flex-1 h-2 bg-[#1a1a1a] rounded-full overflow-hidden"><div class="h-full bg-blue-400 rounded-full" style="width:25%"></div></div><span class="text-xs text-white w-16 text-right">$3,112</span></div>
+            <div class="flex items-center gap-3"><span class="text-xs text-gray-400 w-16">Domicilio</span><div class="flex-1 h-2 bg-[#1a1a1a] rounded-full overflow-hidden"><div class="h-full bg-green-400 rounded-full" style="width:20%"></div></div><span class="text-xs text-white w-16 text-right">$2,493</span></div>
+          </div></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-5"><h3 class="text-[10px] tracking-[0.18em] text-primary uppercase font-semibold mb-4">Top Platillos</h3><div class="space-y-3">
+            <div class="flex items-center justify-between"><div class="flex items-center gap-3"><span class="text-primary font-bold text-sm">#1</span><span class="text-xs text-white">Tacos de Pulpo</span></div><span class="text-xs text-gray-400">42 vendidos</span></div>
+            <div class="flex items-center justify-between"><div class="flex items-center gap-3"><span class="text-primary font-bold text-sm">#2</span><span class="text-xs text-white">Filete al Mojo de Ajo</span></div><span class="text-xs text-gray-400">38 vendidos</span></div>
+            <div class="flex items-center justify-between"><div class="flex items-center gap-3"><span class="text-primary font-bold text-sm">#3</span><span class="text-xs text-white">Coctel de Camarón</span></div><span class="text-xs text-gray-400">31 vendidos</span></div>
+          </div></div>
+        </div>
+      </div>
+
+      <!-- ========== DESCUENTOS ========== -->
+      <div id="screen-descuentos" class="screen">
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-xl font-bold text-white tracking-wide">Descuentos y Promociones</h1>
+          <button class="text-[10px] px-3 py-1.5 bg-primary text-black rounded-lg font-semibold hover:bg-primary-dark transition">+ Nuevo Descuento</button>
+        </div>
+        <div class="grid grid-cols-3 gap-4 mb-6">
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Total Descuentos</span><p class="text-2xl font-light mt-1">5</p></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Activos</span><p class="text-2xl font-light mt-1 text-green-400">3</p></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Usos Totales</span><p class="text-2xl font-light mt-1">127</p></div>
+        </div>
+        <div class="bg-cardBg border border-primary/15 rounded-xl overflow-hidden">
+          <table class="w-full text-left">
+            <thead><tr class="border-b border-primary/10 text-gray-500 text-[10px] uppercase tracking-wider"><th class="p-4">Código</th><th class="p-4">Descripción</th><th class="p-4">Tipo</th><th class="p-4">Valor</th><th class="p-4">Usos</th><th class="p-4 text-center">Estado</th></tr></thead>
+            <tbody class="divide-y divide-primary/10">
+              <tr class="text-sm"><td class="p-4"><code class="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs border border-primary/20">BIENVENIDO15</code></td><td class="p-4 text-xs text-gray-400">15% de descuento para nuevos clientes</td><td class="p-4 text-xs text-gray-400">Porcentaje</td><td class="p-4 text-xs text-white font-semibold">15%</td><td class="p-4 text-xs text-gray-400">45/100</td><td class="p-4 text-center"><span class="w-5 h-5 bg-green-500 rounded-full inline-block"></span></td></tr>
+              <tr class="text-sm"><td class="p-4"><code class="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs border border-primary/20">VIERNES20</code></td><td class="p-4 text-xs text-gray-400">$20 off en pedidos mayores a $200</td><td class="p-4 text-xs text-gray-400">Monto Fijo</td><td class="p-4 text-xs text-white font-semibold">$20</td><td class="p-4 text-xs text-gray-400">82/200</td><td class="p-4 text-center"><span class="w-5 h-5 bg-green-500 rounded-full inline-block"></span></td></tr>
+              <tr class="text-sm"><td class="p-4"><code class="bg-primary/10 text-primary px-2 py-0.5 rounded text-xs border border-primary/20">VERANO10</code></td><td class="p-4 text-xs text-gray-400">10% en bebidas frescas</td><td class="p-4 text-xs text-gray-400">Porcentaje</td><td class="p-4 text-xs text-white font-semibold">10%</td><td class="p-4 text-xs text-gray-400">0/50</td><td class="p-4 text-center"><span class="w-5 h-5 bg-gray-600 rounded-full inline-block"></span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ========== DIVIDIR CUENTA ========== -->
+      <div id="screen-dividir" class="screen">
+        <div class="mb-6"><h1 class="text-xl font-bold text-white tracking-wide">Dividir Cuenta</h1><p class="text-xs text-gray-500 mt-1">Selecciona un pedido y configura cómo dividirlo</p></div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div class="lg:col-span-2">
+            <div class="bg-cardBg border border-primary/15 rounded-xl p-5 mb-4">
+              <h3 class="text-[10px] tracking-[0.18em] text-primary uppercase font-semibold mb-3">Pedido Seleccionado</h3>
+              <div class="space-y-2 mb-3">
+                <div class="flex justify-between text-xs"><span class="text-gray-400">2x Tacos de Pulpo</span><span class="text-white">$378.00</span></div>
+                <div class="flex justify-between text-xs"><span class="text-gray-400">1x Filete al Mojo de Ajo</span><span class="text-white">$245.00</span></div>
+                <div class="flex justify-between text-xs"><span class="text-gray-400">Subtotal</span><span class="text-white">$623.00</span></div>
+                <div class="flex justify-between text-xs"><span class="text-gray-400">IVA</span><span class="text-white">$99.68</span></div>
+                <div class="border-t border-primary/10 pt-2 flex justify-between font-semibold"><span class="text-sm text-white">Total</span><span class="text-primary">$722.68</span></div>
+              </div>
+            </div>
+            <div class="bg-cardBg border border-primary/15 rounded-xl p-5">
+              <h3 class="text-[10px] tracking-[0.18em] text-primary uppercase font-semibold mb-4">Configuración de División</h3>
+              <div class="flex items-center gap-3 mb-4"><span class="text-xs text-gray-400">Personas:</span><button class="w-8 h-8 bg-darkBg border border-primary/20 rounded-lg flex items-center justify-center text-primary text-sm hover:bg-primary/10">-</button><span class="text-lg font-bold text-white w-8 text-center">3</span><button class="w-8 h-8 bg-darkBg border border-primary/20 rounded-lg flex items-center justify-center text-primary text-sm hover:bg-primary/10">+</button></div>
+              <div class="flex gap-2 mb-4"><button class="px-4 py-2 bg-primary text-black text-xs font-semibold rounded-lg">Igual</button><button class="px-4 py-2 bg-cardBg border border-primary/15 text-gray-400 text-xs rounded-lg">Porcentaje</button><button class="px-4 py-2 bg-cardBg border border-primary/15 text-gray-400 text-xs rounded-lg">Manual</button></div>
+              <div class="space-y-3">
+                <div class="flex items-center gap-3 bg-darkBg p-3 rounded-lg"><span class="text-xs text-gray-400 w-20">Persona 1</span><span class="text-sm font-semibold text-white flex-1 text-right">$240.89</span></div>
+                <div class="flex items-center gap-3 bg-darkBg p-3 rounded-lg"><span class="text-xs text-gray-400 w-20">Persona 2</span><span class="text-sm font-semibold text-white flex-1 text-right">$240.89</span></div>
+                <div class="flex items-center gap-3 bg-darkBg p-3 rounded-lg"><span class="text-xs text-gray-400 w-20">Persona 3</span><span class="text-sm font-semibold text-white flex-1 text-right">$240.90</span></div>
+              </div>
+              <div class="flex items-center justify-between mt-4 p-3 bg-green-500/5 border border-green-500/20 rounded-lg"><span class="text-xs text-green-400">✓ La suma coincide con el total</span><span class="text-sm font-bold text-green-400">$722.68</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== HISTORIAL PEDIDOS ========== -->
+      <div id="screen-historial" class="screen">
+        <div class="flex items-center justify-between mb-6">
+          <h1 class="text-xl font-bold text-white tracking-wide">Historial de Pedidos</h1>
+          <span class="text-xs text-gray-500">23 pedidos — $8,945 total</span>
+        </div>
+        <div class="flex gap-4 mb-6">
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4 flex-1 cursor-pointer hover:border-primary/40 transition"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Completados</span><p class="text-xl font-light mt-1 text-green-400">18</p></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4 flex-1 cursor-pointer hover:border-primary/40 transition"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Pendientes</span><p class="text-xl font-light mt-1 text-amber-400">3</p></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4 flex-1 cursor-pointer hover:border-primary/40 transition"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Cancelados</span><p class="text-xl font-light mt-1 text-red-400">2</p></div>
+        </div>
+        <div class="flex gap-2 mb-4"><button class="px-4 py-2 bg-primary text-black text-xs font-semibold rounded-lg">Todos</button><button class="px-4 py-2 bg-cardBg border border-primary/15 text-gray-400 text-xs rounded-lg">Completados</button><button class="px-4 py-2 bg-cardBg border border-primary/15 text-gray-400 text-xs rounded-lg">Pendientes</button><button class="px-4 py-2 bg-cardBg border border-primary/15 text-gray-400 text-xs rounded-lg">Cancelados</button></div>
+        <div class="space-y-2">
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:border-primary/30 transition">
+            <div class="flex items-center gap-3"><i data-lucide="shopping-bag" class="w-5 h-5 text-primary"></i><div><span class="text-sm font-semibold text-white">ORD-007</span><span class="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded ml-2">Mesa 2</span><p class="text-[10px] text-gray-500 mt-0.5">24/07/2026 — 13:45 • Efectivo</p></div></div>
+            <div class="flex items-center gap-4"><span class="text-[9px] bg-green-500/10 text-green-400 px-2 py-0.5 rounded border border-green-500/20">Completado</span><span class="text-sm font-semibold text-white">$485.00</span></div>
+          </div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:border-primary/30 transition">
+            <div class="flex items-center gap-3"><i data-lucide="shopping-bag" class="w-5 h-5 text-primary"></i><div><span class="text-sm font-semibold text-white">ORD-008</span><span class="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded ml-2">Mesa 5</span><p class="text-[10px] text-gray-500 mt-0.5">24/07/2026 — 14:10 • Tarjeta</p></div></div>
+            <div class="flex items-center gap-4"><span class="text-[9px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20">Pendiente</span><span class="text-sm font-semibold text-white">$623.00</span></div>
+          </div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4 flex items-center justify-between cursor-pointer hover:border-primary/30 transition">
+            <div class="flex items-center gap-3"><i data-lucide="shopping-bag" class="w-5 h-5 text-primary"></i><div><span class="text-sm font-semibold text-white">ORD-009</span><span class="text-[9px] bg-blue-500/10 text-blue-400 px-1.5 py-0.5 rounded ml-2">Domicilio</span><p class="text-[10px] text-gray-500 mt-0.5">24/07/2026 — 14:20 • Efectivo</p></div></div>
+            <div class="flex items-center gap-4"><span class="text-[9px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded border border-amber-500/20">Pendiente</span><span class="text-sm font-semibold text-white">$345.00</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== ADMIN PANEL ========== -->
+      <div id="screen-admin" class="screen">
+        <h1 class="text-xl font-bold text-white tracking-wide mb-6">Panel de Administración</h1>
+        <div class="grid grid-cols-3 gap-4 mb-6">
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Platillos Activos</span><p class="text-2xl font-light mt-1">24</p></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Mesas Libres</span><p class="text-2xl font-light mt-1 text-green-400">6</p></div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-4"><span class="text-[10px] text-gray-500 uppercase tracking-wider">Métodos de Pago</span><p class="text-2xl font-light mt-1">2</p></div>
+        </div>
+        <div class="bg-cardBg border border-primary/15 rounded-xl p-5 mb-6">
+          <div class="flex items-center justify-between mb-4"><h3 class="text-[10px] tracking-[0.18em] text-primary uppercase font-semibold">Gestión de Platillos</h3><button class="text-[10px] px-3 py-1.5 bg-primary text-black rounded-lg font-semibold">+ Nuevo Platillo</button></div>
+          <div class="space-y-2">
+            <div class="flex items-center gap-4 bg-darkBg p-3 rounded-lg"><div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0"><i data-lucide="utensils-crossed" class="w-5 h-5 text-primary/50"></i></div><div class="flex-1"><p class="text-xs font-semibold text-white">Tacos de Pulpo</p><p class="text-[10px] text-gray-500">Entradas • $189</p></div><div class="flex items-center gap-2"><span class="text-yellow-400 text-xs">⭐</span><button class="text-[10px] text-primary border border-primary/20 px-2 py-1 rounded hover:bg-primary/10">Editar</button></div></div>
+            <div class="flex items-center gap-4 bg-darkBg p-3 rounded-lg"><div class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0"><i data-lucide="utensils-crossed" class="w-5 h-5 text-primary/50"></i></div><div class="flex-1"><p class="text-xs font-semibold text-white">Filete al Mojo de Ajo</p><p class="text-[10px] text-gray-500">Platos Fuertes • $245</p></div><div class="flex items-center gap-2"><span class="text-yellow-400 text-xs">⭐</span><button class="text-[10px] text-primary border border-primary/20 px-2 py-1 rounded hover:bg-primary/10">Editar</button></div></div>
+          </div>
+        </div>
+        <div class="bg-cardBg border border-primary/15 rounded-xl p-5">
+          <h3 class="text-[10px] tracking-[0.18em] text-primary uppercase font-semibold mb-4">Respaldo y Seguridad en la Nube</h3>
+          <div class="grid grid-cols-2 gap-3">
+            <button class="bg-primary/10 border border-primary/20 text-primary text-[10px] font-semibold py-3 rounded-lg hover:bg-primary/20 transition flex items-center justify-center gap-2"><i data-lucide="cloud-upload" class="w-4 h-4"></i> Respaldar en la Nube</button>
+            <button class="bg-cardBg border border-primary/15 text-gray-400 text-[10px] font-semibold py-3 rounded-lg hover:border-primary/40 transition flex items-center justify-center gap-2"><i data-lucide="cloud-download" class="w-4 h-4"></i> Descargar de la Nube</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== MÁS INFORMACIÓN ========== -->
+      <div id="screen-mas-info" class="screen">
+        <div class="max-w-2xl mx-auto">
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-8 text-center mb-6">
+            <div class="w-20 h-20 rounded-full border-2 border-primary/40 flex items-center justify-center mx-auto mb-4" style="box-shadow:0 0 20px rgba(212,175,55,0.3)"><i data-lucide="fish" class="w-10 h-10 text-primary"></i></div>
+            <h2 class="text-primary font-bold tracking-[0.2em] text-xl">NUESTRA HISTORIA</h2>
+            <div class="w-16 h-0.5 bg-primary/30 mx-auto my-4"></div>
+            <p class="text-sm text-gray-400 leading-relaxed mb-4">El Pulpazo nació del amor por el mar y la tradición gastronómica de nuestra costa. Desde 2015, nos dedicamos a ofrecer los mariscos más frescos, preparados con recetas que honran nuestras raíces.</p>
+            <p class="text-sm text-gray-400 leading-relaxed mb-4">Cada platillo cuenta una historia: desde los clásicos tacos de pulpo hasta nuestros signatures como el Filete al Mojo de Ajo, todo preparado con ingredientes de primera calidad.</p>
+            <p class="text-sm text-gray-400 leading-relaxed">Hoy, con tres ubicaciones en la zona, seguimos comprometidos con la calidad, el servicio y esa sazón que nos distingue.</p>
+          </div>
+          <div class="bg-cardBg border border-primary/15 rounded-xl p-6">
+            <h3 class="text-[10px] tracking-[0.18em] text-primary uppercase font-semibold mb-4">Contacto Ejecutivo</h3>
+            <div class="space-y-4">
+              <div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"><i data-lucide="user" class="w-5 h-5 text-primary"></i></div><div><p class="text-sm font-semibold text-white">Alejandro Montenegro</p><p class="text-[10px] text-gray-500">Director General — alex@elpulpazo.com</p></div></div>
+              <div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center"><i data-lucide="phone" class="w-5 h-5 text-primary"></i></div><div><p class="text-sm font-semibold text-white">Línea Directa Gerencia</p><p class="text-[10px] text-gray-500">+52 (777) 123-4567 — gerencia@elpulpazo.com</p></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- end screens container -->
+  </div><!-- end main content -->
+</div><!-- end dashboard layout -->
+
+<!-- ==================== ICON INIT ==================== -->
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    setTimeout(function() { try { lucide.createIcons(); } catch(e) {} }, 500);
+  });
+</script>
+
+</body>
+</html>
